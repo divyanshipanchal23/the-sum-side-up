@@ -70,9 +70,13 @@ watch(() => props.leftValue, (newVal, oldVal) => {
   forceUpdate.value++;
 }, { immediate: true });
 
+// Add a more explicit watcher for the rightValue (target number)
 watch(() => props.rightValue, (newVal, oldVal) => {
-  console.log(`RightValue changed: ${oldVal} -> ${newVal}`);
-  forceUpdate.value++;
+  console.log(`RightValue (target) changed: ${oldVal} -> ${newVal}`);
+  if (newVal !== 0) {
+    console.log('Target number is not zero, forcing scale update');
+    forceUpdate.value += 3; // Force a more aggressive update
+  }
 }, { immediate: true });
 
 // Calculate the tilt based on the difference between leftValue and rightValue
@@ -87,7 +91,11 @@ const tilt = computed(() => {
   // Apply a non-linear tilt to make small differences more visible
   // Use a cubic function to increase sensitivity for small differences
   const cubicFactor = 0.1;
-  const direction = diff > 0 ? 1 : -1;
+  
+  // FIXED: Invert the direction to match physical expectations
+  // When left > right, diff is positive, we want a negative tilt (left down)
+  // When left < right, diff is negative, we want a positive tilt (right down)
+  const direction = diff > 0 ? -1 : 1;
   const tiltAngle = direction * Math.min(Math.pow(Math.abs(diff), 1/3) * 5, maxTilt);
   
   console.log(`Calculated tilt angle: ${tiltAngle}`);
@@ -97,6 +105,14 @@ const tilt = computed(() => {
 onMounted(() => {
   console.log("BalanceScale mounted");
   console.log(`Initial values: leftValue=${props.leftValue}, rightValue=${props.rightValue}`);
+  
+  // If rightValue is not zero, force an initial update
+  if (props.rightValue !== 0) {
+    console.log('Target number is not zero on mount, forcing initial update');
+    setTimeout(() => {
+      forceUpdate.value += 5;
+    }, 100); // Short delay to ensure Vue has finished rendering
+  }
 });
 
 onUpdated(() => {
