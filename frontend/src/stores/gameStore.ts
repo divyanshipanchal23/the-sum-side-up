@@ -126,8 +126,9 @@ export const useGameStore = defineStore('game', () => {
   }
 
   function resetGame() {
+    // First set the game state with default values
     gameState.value = {
-      targetNumber: 0,
+      targetNumber: Math.floor(Math.random() * (config.value.targetRange.max - config.value.targetRange.min + 1)) + config.value.targetRange.min,
       addends: Array(config.value.maxAddends).fill(0),
       attempts: 0,
       successes: 0,
@@ -135,7 +136,8 @@ export const useGameStore = defineStore('game', () => {
       isComplete: false,
       lastAttemptCorrect: null
     };
-    startNewGame();
+    
+    // No need to call startNewGame since we already set the targetNumber
   }
 
   return {

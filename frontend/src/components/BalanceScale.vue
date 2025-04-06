@@ -1,18 +1,29 @@
 <template>
   <div class="balance-scale-container">
     <div class="scale-base">
+      <!-- Base and stand -->
+      <div class="scale-stand-base"></div>
       <div class="scale-stand"></div>
+      <div class="scale-fulcrum"></div>
       
+      <!-- Beam with pivot point -->
       <div 
         class="scale-beam" 
         :class="{ 'tilted-left': tilt < 0, 'tilted-right': tilt > 0, 'balanced': tilt === 0 }"
         :style="{ transform: `rotate(${tilt}deg)` }"
       >
+        <div class="pivot-point"></div>
+        
+        <!-- Left chain and pan -->
+        <div class="scale-chain left-chain"></div>
         <div class="scale-pan left-pan">
           <div class="scale-pan-content">
             <slot name="left-content">{{ leftValue }}</slot>
           </div>
         </div>
+        
+        <!-- Right chain and pan -->
+        <div class="scale-chain right-chain"></div>
         <div class="scale-pan right-pan">
           <div class="scale-pan-content">
             <slot name="right-content">{{ rightValue }}</slot>
@@ -76,42 +87,96 @@ const tilt = computed(() => {
 .scale-base {
   position: relative;
   width: 100%;
-  height: 200px;
+  height: 300px; /* Increased height for better proportions */
 }
 
-.scale-stand {
+/* Base of the stand */
+.scale-stand-base {
   position: absolute;
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 20px;
-  height: 100px;
+  width: 60px;
+  height: 15px;
+  background-color: #4b5563;
+  border-radius: 4px;
+}
+
+/* Vertical stand */
+.scale-stand {
+  position: absolute;
+  bottom: 15px; /* Sits on top of the base */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 14px;
+  height: 150px;
   background-color: #6b7280;
   border-radius: 4px;
 }
 
+/* Fulcrum at the top of the stand */
+.scale-fulcrum {
+  position: absolute;
+  bottom: 165px; /* Stand height + base height */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 30px;
+  height: 15px;
+  background-color: #4b5563;
+  border-radius: 50% 50% 0 0;
+}
+
+/* Horizontal beam */
 .scale-beam {
   position: absolute;
-  top: 50px;
+  bottom: 175px; /* Positioned to rest on the fulcrum */
   left: 50%;
-  transform-origin: center;
+  transform-origin: center bottom; /* Rotate from center bottom */
   transform: translateX(-50%) rotate(0deg);
-  width: 80%;
-  height: 10px;
+  width: 70%;
+  height: 8px;
   background-color: #4b5563;
   border-radius: 4px;
   transition: transform 0.5s ease;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
 }
 
+/* Center pivot point */
+.pivot-point {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 12px;
+  background-color: #9ca3af;
+  border-radius: 50%;
+  z-index: 10;
+}
+
+/* Chains connecting beam to pans */
+.scale-chain {
+  position: absolute;
+  width: 2px;
+  height: 60px;
+  background-color: #9ca3af;
+  top: 4px; /* Start from bottom of beam */
+}
+
+.left-chain {
+  left: 10%;
+}
+
+.right-chain {
+  right: 10%;
+}
+
+/* Scale pans */
 .scale-pan {
-  width: 100px;
-  height: 100px;
+  position: absolute;
+  width: 80px;
+  height: 80px;
   background-color: #6366f1;
   border-radius: 50%;
-  margin-top: 60px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -119,14 +184,17 @@ const tilt = computed(() => {
   font-size: 1.5rem;
   font-weight: bold;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  top: 64px; /* Chain height + beam height */
 }
 
 .left-pan {
-  margin-left: -50px;
+  left: 10%;
+  transform: translateX(-50%);
 }
 
 .right-pan {
-  margin-right: -50px;
+  right: 10%;
+  transform: translateX(50%);
 }
 
 .scale-pan-content {
@@ -137,16 +205,9 @@ const tilt = computed(() => {
   height: 100%;
 }
 
-.tilted-left {
-  transform: translateX(-50%) rotate(-10deg);
-}
-
-.tilted-right {
-  transform: translateX(-50%) rotate(10deg);
-}
-
-.balanced {
-  transform: translateX(-50%) rotate(0deg);
+/* Tilt classes are now handled by the :style binding */
+.tilted-left, .tilted-right, .balanced {
+  /* These classes can be used for additional styling */
 }
 
 .scale-feedback {

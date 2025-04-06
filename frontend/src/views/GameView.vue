@@ -41,7 +41,14 @@
             :rightValue="gameState.targetNumber" 
             :showFeedback="true"
             class="mb-8"
-          />
+          >
+            <template #right-content>
+              {{ gameState.targetNumber }}
+            </template>
+            <template #left-content>
+              {{ sum }}
+            </template>
+          </BalanceScale>
           
           <!-- Number Input Section -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
