@@ -10,7 +10,7 @@
       <div 
         class="scale-beam" 
         :class="{ 'tilted-left': tilt < 0, 'tilted-right': tilt > 0, 'balanced': tilt === 0 }"
-        :style="{ transform: `rotate(${tilt}deg)` }"
+        :style="{ transform: `translateX(-50%) rotate(${tilt}deg)` }"
       >
         <div class="pivot-point"></div>
         
@@ -124,15 +124,15 @@ const tilt = computed(() => {
   height: 15px;
   background-color: #4b5563;
   border-radius: 50% 50% 0 0;
+  z-index: 5;
 }
 
 /* Horizontal beam */
 .scale-beam {
   position: absolute;
-  bottom: 175px; /* Positioned to rest on the fulcrum */
+  bottom: 180px; /* Adjusted to sit properly on the fulcrum */
   left: 50%;
-  transform-origin: center bottom; /* Rotate from center bottom */
-  transform: translateX(-50%) rotate(0deg);
+  transform-origin: center center; /* Rotate from exact center */
   width: 70%;
   height: 8px;
   background-color: #4b5563;
@@ -144,12 +144,13 @@ const tilt = computed(() => {
 .pivot-point {
   position: absolute;
   left: 50%;
-  top: 0;
+  top: 50%;
   transform: translate(-50%, -50%);
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   background-color: #9ca3af;
   border-radius: 50%;
+  border: 2px solid #6b7280;
   z-index: 10;
 }
 
@@ -159,15 +160,15 @@ const tilt = computed(() => {
   width: 2px;
   height: 60px;
   background-color: #9ca3af;
-  top: 4px; /* Start from bottom of beam */
+  top: 4px; /* Start from beam */
 }
 
 .left-chain {
-  left: 10%;
+  left: 20%;
 }
 
 .right-chain {
-  right: 10%;
+  right: 20%;
 }
 
 /* Scale pans */
@@ -188,12 +189,12 @@ const tilt = computed(() => {
 }
 
 .left-pan {
-  left: 10%;
+  left: 20%;
   transform: translateX(-50%);
 }
 
 .right-pan {
-  right: 10%;
+  right: 20%;
   transform: translateX(50%);
 }
 
