@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from .api.game import router as game_router
+
 app = FastAPI(
     title="Balance Scale Addition Game API",
     description="Backend API for the Balance Scale Addition Game",
@@ -15,6 +17,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include routers
+app.include_router(game_router)
 
 @app.get("/")
 async def root():
