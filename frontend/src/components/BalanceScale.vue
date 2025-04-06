@@ -1,5 +1,5 @@
 <template>
-  <div class="balance-scale-container">
+  <div class="balance-scale-container" :key="`scale-${leftValue}-${rightValue}-${tilt}`">
     <div class="scale-base">
       <!-- Base and stand -->
       <div class="scale-stand-base"></div>
@@ -47,7 +47,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, ref, watch, onMounted, onUpdated } from 'vue';
 
 interface Props {
   leftValue?: number;
@@ -61,17 +61,47 @@ const props = withDefaults(defineProps<Props>(), {
   showFeedback: true
 });
 
+// For forcing re-renders when values change
+const forceUpdate = ref(0);
+
+// Log when props change (for debugging)
+watch(() => props.leftValue, (newVal, oldVal) => {
+  console.log(`LeftValue changed: ${oldVal} -> ${newVal}`);
+  forceUpdate.value++;
+}, { immediate: true });
+
+watch(() => props.rightValue, (newVal, oldVal) => {
+  console.log(`RightValue changed: ${oldVal} -> ${newVal}`);
+  forceUpdate.value++;
+}, { immediate: true });
+
 // Calculate the tilt based on the difference between leftValue and rightValue
 const tilt = computed(() => {
   const diff = props.leftValue - props.rightValue;
+  console.log(`Calculating tilt: leftValue=${props.leftValue}, rightValue=${props.rightValue}, diff=${diff}`);
+  
   // Cap the tilt to a maximum of 15 degrees in either direction
   const maxTilt = 15;
   if (diff === 0) return 0;
   
-  // Apply a non-linear tilt to make small differences visible
-  // but prevent extreme angles for large differences
-  const tiltAngle = Math.min(Math.max(diff * 2, -maxTilt), maxTilt);
+  // Apply a non-linear tilt to make small differences more visible
+  // Use a cubic function to increase sensitivity for small differences
+  const cubicFactor = 0.1;
+  const direction = diff > 0 ? 1 : -1;
+  const tiltAngle = direction * Math.min(Math.pow(Math.abs(diff), 1/3) * 5, maxTilt);
+  
+  console.log(`Calculated tilt angle: ${tiltAngle}`);
   return tiltAngle;
+});
+
+onMounted(() => {
+  console.log("BalanceScale mounted");
+  console.log(`Initial values: leftValue=${props.leftValue}, rightValue=${props.rightValue}`);
+});
+
+onUpdated(() => {
+  console.log("BalanceScale updated");
+  console.log(`Current values: leftValue=${props.leftValue}, rightValue=${props.rightValue}, tilt=${tilt.value}`);
 });
 </script>
 
@@ -137,7 +167,7 @@ const tilt = computed(() => {
   height: 8px;
   background-color: #4b5563;
   border-radius: 4px;
-  transition: transform 0.5s ease;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); /* Bouncy, more noticeable animation */
 }
 
 /* Center pivot point */
@@ -161,6 +191,7 @@ const tilt = computed(() => {
   height: 60px;
   background-color: #9ca3af;
   top: 4px; /* Start from beam */
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); /* Match beam animation */
 }
 
 .left-chain {
@@ -186,6 +217,7 @@ const tilt = computed(() => {
   font-weight: bold;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   top: 64px; /* Chain height + beam height */
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); /* Match beam animation */
 }
 
 .left-pan {

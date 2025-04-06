@@ -78,23 +78,29 @@ const updateValue = (event: Event) => {
   if (!isNaN(value)) {
     // Ensure the value is within the min/max bounds
     const boundedValue = Math.min(Math.max(value, props.min), props.max);
+    console.log(`NumberInput: emitting update from ${props.modelValue} to ${boundedValue}`);
     emit('update:modelValue', boundedValue);
   }
 };
 
 const incrementValue = () => {
   if (props.modelValue < props.max) {
-    emit('update:modelValue', props.modelValue + props.step);
+    const newValue = props.modelValue + props.step;
+    console.log(`NumberInput: incrementing from ${props.modelValue} to ${newValue}`);
+    emit('update:modelValue', newValue);
   }
 };
 
 const decrementValue = () => {
   if (props.modelValue > props.min) {
-    emit('update:modelValue', props.modelValue - props.step);
+    const newValue = props.modelValue - props.step;
+    console.log(`NumberInput: decrementing from ${props.modelValue} to ${newValue}`);
+    emit('update:modelValue', newValue);
   }
 };
 
 const setValue = (value: number) => {
+  console.log(`NumberInput: setting value from ${props.modelValue} to ${value}`);
   emit('update:modelValue', value);
 };
 </script>

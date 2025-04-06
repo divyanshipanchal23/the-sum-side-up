@@ -50,11 +50,14 @@ export const useGameStore = defineStore('game', () => {
 
   // Computed properties
   const sum = computed(() => {
+    console.log('Calculating sum in store:', gameState.value.addends);
     return gameState.value.addends.reduce((a, b) => a + b, 0);
   });
 
   const isBalanced = computed(() => {
-    return sum.value === gameState.value.targetNumber;
+    const isEqual = sum.value === gameState.value.targetNumber;
+    console.log(`Checking balance: ${sum.value} === ${gameState.value.targetNumber} = ${isEqual}`);
+    return isEqual;
   });
 
   const difference = computed(() => {
@@ -81,7 +84,17 @@ export const useGameStore = defineStore('game', () => {
 
   function setAddend(index: number, value: number) {
     if (index >= 0 && index < gameState.value.addends.length) {
-      gameState.value.addends[index] = value;
+      console.log(`Store: setting addend ${index} from ${gameState.value.addends[index]} to ${value}`);
+      
+      // Create a new array to ensure reactivity
+      const newAddends = [...gameState.value.addends];
+      newAddends[index] = value;
+      
+      // Important: Replace the entire array with the new one
+      gameState.value.addends = newAddends;
+      
+      console.log('Store: new addends array:', gameState.value.addends);
+      console.log('Store: new sum:', sum.value);
     }
   }
 

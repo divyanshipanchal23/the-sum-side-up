@@ -128,7 +128,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import BalanceScale from '../components/BalanceScale.vue';
 import NumberInput from '../components/NumberInput.vue';
 import { useGameStore } from '../stores/gameStore';
@@ -137,7 +137,7 @@ const gameStore = useGameStore();
 const { 
   config, 
   gameState, 
-  sum, 
+  sum: storeSum, 
   isBalanced, 
   startNewGame, 
   setAddend, 
@@ -145,7 +145,18 @@ const {
   resetGame
 } = gameStore;
 
+// Create a local computed property to ensure reactivity
+const sum = computed(() => {
+  console.log('Computing sum in GameView', gameState.addends);
+  return gameState.addends.reduce((a, b) => a + b, 0);
+});
+
 const gameStarted = ref(false);
+
+// Watch for changes in the addends array
+watch(() => gameState.addends, (newVal) => {
+  console.log('Addends changed in GameView', newVal);
+}, { deep: true });
 
 function startGame() {
   gameStarted.value = true;
@@ -153,6 +164,7 @@ function startGame() {
 }
 
 function updateAddend(index: number, value: number) {
+  console.log(`Updating addend ${index} to ${value}`);
   setAddend(index, value);
 }
 
@@ -166,6 +178,7 @@ function nextProblem() {
 
 onMounted(() => {
   // Initialize the game when the component mounts
+  console.log('GameView mounted, initializing game');
   resetGame();
 });
 </script> 
