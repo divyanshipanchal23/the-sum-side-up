@@ -59,3 +59,56 @@ I'm choosing to separate the game logic from the presentation layer, which will 
 5. **Time Management**: Completing all required functionality within the 10-day timeline while maintaining code quality
 
 I'll update this document daily as I make progress, encounter and solve challenges, and learn new things throughout the development process. 
+
+### Day 2: Core UI Components & Data Models
+
+Today I focused on building the foundational components for the game. I've successfully created:
+
+1. **BalanceScale Component**: I implemented a visually appealing balance scale that:
+   - Uses CSS transforms and transitions for smooth tilting animation
+   - Provides clear visual feedback about which side is heavier
+   - Applies non-linear scaling to the tilt angle to make small differences more noticeable
+   - Uses reactive Vue props to update in real-time as values change
+
+2. **NumberInput Component**: I created a versatile number input that:
+   - Includes increment/decrement buttons for easy value adjustment
+   - Provides direct input for precise value entry
+   - Features "quick number" buttons for commonly used values
+   - Uses Vue's v-model for seamless two-way binding
+
+3. **Game State Management**: I've developed a robust state management system using Pinia that:
+   - Tracks the current game state including target number, user inputs, and score
+   - Provides computed properties for derived values like sum and balance status
+   - Includes actions for updating addends, checking balance, and starting new games
+   - Implements level progression logic with difficulty scaling
+
+4. **Backend Models and API**: On the backend side, I've defined:
+   - Pydantic models for game configuration, user progress, and game sessions
+   - API endpoints for creating and retrieving game configurations
+   - Logic for recording and tracking user attempts
+
+### Day 3: Technical Challenges & Solutions
+
+While implementing the core game mechanics, I encountered several interesting challenges:
+
+1. **ES Module Compatibility**: 
+   - **Challenge**: The project uses ES modules (`"type": "module"` in package.json), but some configuration files needed Node.js path utilities like `__dirname` which aren't available in ES modules.
+   - **Solution**: I adapted the code to use ES module-compatible alternatives with `import.meta.url` and `fileURLToPath`.
+
+2. **Tailwind CSS Configuration**:
+   - **Challenge**: The Tailwind CSS configuration wasn't properly detecting content files, leading to missing styles.
+   - **Solution**: I updated the configuration to use absolute paths with proper ES module path resolution.
+
+3. **Balance Scale Physics**:
+   - **Challenge**: Creating a physically intuitive tilt direction for the balance scale that matches expectations.
+   - **Solution**: I inverted the tilt direction calculation to ensure the heavier side tilts downward, implementing a cubic root function to enhance the visibility of small differences.
+
+4. **State Reactivity**:
+   - **Challenge**: Ensuring Vue components re-render when the state changes, especially with nested objects and arrays.
+   - **Solution**: Used deep watching with Vue's watch API and designed the Pinia store to properly replace arrays instead of mutating them in place.
+
+I'm particularly pleased with how the balance scale component turned out. The animation feels smooth and intuitive, providing clear feedback to users. The cubic scaling of the tilt angle makes even small differences in values noticeable, which is crucial for the educational aspect of the game.
+
+The game state management using Pinia has proven to be a good decision, as it provides a clean separation between the UI and logic. This will make it easier to implement additional features and maintain the codebase going forward.
+
+For Day 4, I plan to focus on refining the game flow and improving the user experience, especially for young learners who might need additional guidance and encouragement. 
