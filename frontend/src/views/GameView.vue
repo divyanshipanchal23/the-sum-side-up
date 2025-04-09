@@ -31,19 +31,19 @@
           
           <div class="game-instructions bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
             <p class="text-blue-700">
-              Add numbers on the left side to match the target value of <span class="font-bold">{{ gameState.targetNumber }}</span> on the right side.
+              Add numbers on the left side to match the target value of <span class="font-bold">{{ targetNumber }}</span> on the right side.
             </p>
           </div>
           
           <!-- Balance Scale Component -->
           <BalanceScale 
             :leftValue="sum" 
-            :rightValue="gameState.targetNumber" 
+            :rightValue="targetNumber" 
             :showFeedback="true"
             class="mb-8"
           >
             <template #right-content>
-              {{ gameState.targetNumber }}
+              {{ targetNumber }}
             </template>
             <template #left-content>
               {{ sum }}
@@ -79,7 +79,7 @@
             <div class="right-side">
               <h3 class="text-lg font-semibold text-gray-800 mb-3">Target:</h3>
               <div class="bg-indigo-100 rounded-lg p-6 flex items-center justify-center">
-                <span class="text-4xl font-bold text-indigo-700">{{ gameState.targetNumber }}</span>
+                <span class="text-4xl font-bold text-indigo-700">{{ targetNumber }}</span>
               </div>
               
               <div class="mt-6">
@@ -128,7 +128,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch, nextTick } from 'vue';
 import BalanceScale from '../components/BalanceScale.vue';
 import NumberInput from '../components/NumberInput.vue';
 import { useGameStore } from '../stores/gameStore';
@@ -142,43 +142,129 @@ const {
   startNewGame, 
   setAddend, 
   checkBalance,
-  resetGame
+  resetGame,
+  setTargetNumberDirectly
 } = gameStore;
 
 // Create a local computed property to ensure reactivity
 const sum = computed(() => {
   console.log('Computing sum in GameView', gameState.addends);
-  return gameState.addends.reduce((a, b) => a + b, 0);
+  // Explicitly convert each addend to a number to avoid string concatenation
+  return gameState.addends.reduce((acc, val) => Number(acc) + Number(val), 0);
+});
+
+// Create a local computed property for the target number to ensure reactivity
+const targetNumber = computed(() => {
+  console.log('Getting target number in GameView:', gameState.targetNumber);
+  return gameState.targetNumber;
 });
 
 const gameStarted = ref(false);
+
+// Watch for changes in the game state target number
+watch(() => gameState.targetNumber, (newVal, oldVal) => {
+  console.log(`Target number changed in GameView: ${oldVal} -> ${newVal}`);
+}, { immediate: true });
 
 // Watch for changes in the addends array
 watch(() => gameState.addends, (newVal) => {
   console.log('Addends changed in GameView', newVal);
 }, { deep: true });
 
-function startGame() {
-  gameStarted.value = true;
+async function startGame() {
+  console.log('Starting game, setting gameStarted to true');
+  
+  // First reset the game to initialize everything including target number
+  console.log('Calling resetGame to initialize game state and set target number');
   resetGame();
+  
+  // Wait for the next tick to ensure state is updated
+  await nextTick();
+  
+  // Then set gameStarted flag after initialization
+  gameStarted.value = true;
+  
+  // Verify the target number after reset
+  console.log('Game started with target number:', gameState.targetNumber);
 }
 
 function updateAddend(index: number, value: number) {
-  console.log(`Updating addend ${index} to ${value}`);
+  console.log(`Updating addend ${index} from ${gameState.addends[index]} to ${value} (types: ${typeof gameState.addends[index]} -> ${typeof value})`);
   setAddend(index, value);
+  
+  // Log the resulting sum and check if it matches the target number
+  setTimeout(() => {
+    console.log(`After update - Sum: ${sum.value}, Target: ${targetNumber.value}, isBalanced: ${isBalanced.value}`);
+  }, 0);
 }
 
-function checkAnswer() {
-  checkBalance();
+async function checkAnswer() {
+  console.log(`Checking answer - Current sum: ${sum.value}, Target: ${targetNumber.value}`);
+  
+  // Ensure target number is synchronized before checking
+  // This is crucial for consistent checking
+  setTargetNumberDirectly(targetNumber.value);
+  
+  // Wait for the next tick to ensure state synchronization
+  await nextTick();
+  
+  // Call checkBalance and explicitly handle the return value
+  const isCorrect = checkBalance();
+  
+  // Wait for the next tick to ensure the UI state is updated
+  await nextTick();
+  
+  // Log the state after checking
+  console.log('After check - Current game state:', {
+    result: gameState.lastAttemptCorrect,
+    target: targetNumber.value,
+    isComplete: gameState.isComplete,
+    attempts: gameState.attempts,
+    successes: gameState.successes
+  });
+  
+  // Check local values vs game state to ensure synchronization
+  console.log(`Local vs Store - sum: ${sum.value}, target: ${targetNumber.value}, gameStateTarget: ${gameState.targetNumber}`);
+  
+  // Force a complete state refresh if needed by creating a new reference
+  if (isCorrect && gameState.lastAttemptCorrect !== true) {
+    console.log("Forcing complete state refresh for correct answer");
+    
+    // Create a new state object with all properties to force reactivity
+    const updatedState = {
+      ...gameState,
+      lastAttemptCorrect: true,
+      isComplete: true
+    };
+    
+    // Update the state with the new object
+    Object.assign(gameState, updatedState);
+  }
 }
 
-function nextProblem() {
+async function nextProblem() {
   startNewGame();
+  
+  // Wait for the next tick to ensure state synchronization
+  await nextTick();
+  
+  console.log('New problem started with target number:', gameState.targetNumber);
 }
 
 onMounted(() => {
-  // Initialize the game when the component mounts
-  console.log('GameView mounted, initializing game');
-  resetGame();
+  // Initialize the game when the component mounts to ensure a valid target number is set
+  console.log('GameView mounted, initializing game state');
+  
+  // Generate an initial random target number
+  const min = config.targetRange.min;
+  const max = config.targetRange.max;
+  const randomTarget = Math.floor(Math.random() * (max - min + 1)) + min;
+  
+  console.log(`Setting initial random target from range ${min}-${max}: ${randomTarget}`);
+  
+  // Set the initial target number using the synchronized method
+  setTargetNumberDirectly(randomTarget);
+  
+  console.log('Initial target number set to:', gameState.targetNumber);
 });
 </script> 

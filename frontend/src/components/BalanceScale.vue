@@ -1,5 +1,5 @@
 <template>
-  <div class="balance-scale-container" :key="`scale-${leftValue}-${rightValue}-${tilt}`">
+  <div class="balance-scale-container" :key="`scale-${leftValue}-${rightValue}-${forceUpdate}`">
     <div class="scale-base">
       <!-- Base and stand -->
       <div class="scale-stand-base"></div>
@@ -47,7 +47,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, onMounted, onUpdated } from 'vue';
+import { computed, ref, watch, onMounted, onUpdated, nextTick } from 'vue';
 
 interface Props {
   leftValue?: number;
@@ -71,18 +71,32 @@ watch(() => props.leftValue, (newVal, oldVal) => {
 }, { immediate: true });
 
 // Add a more explicit watcher for the rightValue (target number)
-watch(() => props.rightValue, (newVal, oldVal) => {
+watch(() => props.rightValue, async (newVal, oldVal) => {
   console.log(`RightValue (target) changed: ${oldVal} -> ${newVal}`);
-  if (newVal !== 0) {
-    console.log('Target number is not zero, forcing scale update');
-    forceUpdate.value += 3; // Force a more aggressive update
+  
+  if (newVal !== oldVal) {
+    console.log('Target number changed, forcing scale update');
+    forceUpdate.value += 2;
+    
+    // Use nextTick to ensure DOM updates
+    await nextTick();
+    
+    // Additional update to ensure any transitions complete
+    setTimeout(() => {
+      forceUpdate.value += 1;
+      console.log('Force updated scale after target change');
+    }, 100);
   }
 }, { immediate: true });
 
 // Calculate the tilt based on the difference between leftValue and rightValue
 const tilt = computed(() => {
-  const diff = props.leftValue - props.rightValue;
-  console.log(`Calculating tilt: leftValue=${props.leftValue}, rightValue=${props.rightValue}, diff=${diff}`);
+  // Explicitly convert values to numbers to avoid any string comparison issues
+  const leftNum = Number(props.leftValue);
+  const rightNum = Number(props.rightValue);
+  const diff = leftNum - rightNum;
+  
+  console.log(`Calculating tilt: leftValue=${leftNum}, rightValue=${rightNum}, diff=${diff}`);
   
   // Cap the tilt to a maximum of 15 degrees in either direction
   const maxTilt = 15;
@@ -90,9 +104,7 @@ const tilt = computed(() => {
   
   // Apply a non-linear tilt to make small differences more visible
   // Use a cubic function to increase sensitivity for small differences
-  const cubicFactor = 0.1;
   
-  // FIXED: Invert the direction to match physical expectations
   // When left > right, diff is positive, we want a negative tilt (left down)
   // When left < right, diff is negative, we want a positive tilt (right down)
   const direction = diff > 0 ? -1 : 1;
@@ -106,13 +118,9 @@ onMounted(() => {
   console.log("BalanceScale mounted");
   console.log(`Initial values: leftValue=${props.leftValue}, rightValue=${props.rightValue}`);
   
-  // If rightValue is not zero, force an initial update
-  if (props.rightValue !== 0) {
-    console.log('Target number is not zero on mount, forcing initial update');
-    setTimeout(() => {
-      forceUpdate.value += 5;
-    }, 100); // Short delay to ensure Vue has finished rendering
-  }
+  // Force an initial update regardless of the value
+  forceUpdate.value += 1;
+  console.log("Forced initial update on mount");
 });
 
 onUpdated(() => {
