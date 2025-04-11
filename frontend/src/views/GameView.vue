@@ -150,8 +150,14 @@ import BalanceScale from '../components/BalanceScale.vue';
 import NumberInput from '../components/NumberInput.vue';
 import { useGameStore } from '../stores/gameStore';
 import soundService from '../services/soundService';
+import progressService, { GameAttempt } from '../services/progressService';
+import { useAuthStore } from '../stores/authStore';
+import { useRoute } from 'vue-router';
 
 const gameStore = useGameStore();
+const authStore = useAuthStore();
+const route = useRoute();
+
 const { 
   config, 
   gameState, 
@@ -163,6 +169,13 @@ const {
   resetGame,
   setTargetNumberDirectly
 } = gameStore;
+
+// Get the configuration ID from the route params if available
+const configId = computed(() => route.query.configId as string || 'default');
+
+// Add a timer to track time spent on each problem
+const startTime = ref<Date | null>(null);
+const timeSpent = ref(0);
 
 // Create a local computed property to ensure reactivity
 const sum = computed(() => {
@@ -208,6 +221,9 @@ async function startGame() {
   // Then set gameStarted flag after initialization
   gameStarted.value = true;
   
+  // Start the timer
+  startTime.value = new Date();
+  
   // Verify the target number after reset
   console.log('Game started with target number:', gameState.targetNumber);
 }
@@ -225,6 +241,12 @@ function updateAddend(index: number, value: number) {
 async function checkAnswer() {
   console.log(`Checking answer - Current sum: ${sum.value}, Target: ${targetNumber.value}`);
   
+  // Calculate time spent
+  const endTime = new Date();
+  if (startTime.value) {
+    timeSpent.value = (endTime.getTime() - startTime.value.getTime()) / 1000; // Convert to seconds
+  }
+  
   // Ensure target number is synchronized before checking
   // This is crucial for consistent checking
   setTargetNumberDirectly(targetNumber.value);
@@ -240,6 +262,28 @@ async function checkAnswer() {
     soundService.play('correct');
   } else {
     soundService.play('incorrect');
+  }
+  
+  // Record the attempt if user is authenticated
+  if (authStore.isAuthenticated) {
+    try {
+      // Create attempt record
+      const attempt: GameAttempt = {
+        userId: authStore.userId,
+        activityId: configId.value,
+        timestamp: new Date(),
+        target: targetNumber.value,
+        inputs: [...gameState.addends], // Make a copy of the addends array
+        success: isCorrect,
+        timeSpent: timeSpent.value
+      };
+      
+      // Record the attempt
+      await progressService.recordAttempt(attempt);
+      console.log('Game attempt recorded successfully');
+    } catch (error) {
+      console.error('Failed to record game attempt:', error);
+    }
   }
   
   // Wait for the next tick to ensure the UI state is updated
@@ -282,6 +326,10 @@ async function nextProblem() {
   }
   
   startNewGame();
+  
+  // Reset the timer for the next problem
+  startTime.value = new Date();
+  timeSpent.value = 0;
   
   // Wait for the next tick to ensure state synchronization
   await nextTick();
