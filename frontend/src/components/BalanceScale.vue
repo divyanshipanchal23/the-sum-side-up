@@ -1,5 +1,10 @@
 <template>
-  <div class="balance-scale-container" :key="`scale-${leftValue}-${rightValue}-${forceUpdate}`">
+  <div 
+    class="balance-scale-container" 
+    :key="`scale-${leftValue}-${rightValue}-${forceUpdate}`"
+    role="img" 
+    :aria-label="`Balance scale with ${leftValue} on the left side and ${rightValue} on the right side. ${getBalanceDescription}`"
+  >
     <div class="scale-base">
       <!-- Base and stand -->
       <div class="scale-stand-base"></div>
@@ -17,7 +22,7 @@
         <!-- Left chain and pan -->
         <div class="scale-chain left-chain"></div>
         <div class="scale-pan left-pan">
-          <div class="scale-pan-content">
+          <div class="scale-pan-content" aria-live="polite">
             <slot name="left-content">{{ leftValue }}</slot>
           </div>
         </div>
@@ -25,14 +30,14 @@
         <!-- Right chain and pan -->
         <div class="scale-chain right-chain"></div>
         <div class="scale-pan right-pan">
-          <div class="scale-pan-content">
+          <div class="scale-pan-content" aria-live="polite">
             <slot name="right-content">{{ rightValue }}</slot>
           </div>
         </div>
       </div>
     </div>
     
-    <div class="scale-feedback" v-if="showFeedback">
+    <div class="scale-feedback" v-if="showFeedback" aria-live="assertive">
       <div v-if="tilt < 0" class="text-red-500">
         Left side is heavier
       </div>
@@ -42,6 +47,11 @@
       <div v-else class="text-green-500">
         The scale is balanced!
       </div>
+    </div>
+    
+    <!-- Screen reader only text for balance state -->
+    <div class="sr-only" aria-live="assertive">
+      {{ getBalanceDescription }}
     </div>
   </div>
 </template>
@@ -112,6 +122,17 @@ const tilt = computed(() => {
   
   console.log(`Calculated tilt angle: ${tiltAngle}`);
   return tiltAngle;
+});
+
+// Computed property for screen reader descriptions
+const getBalanceDescription = computed(() => {
+  if (tilt.value < 0) {
+    return `The scale is tilted to the left. ${props.leftValue} is greater than ${props.rightValue}.`;
+  } else if (tilt.value > 0) {
+    return `The scale is tilted to the right. ${props.leftValue} is less than ${props.rightValue}.`;
+  } else {
+    return `The scale is balanced. ${props.leftValue} equals ${props.rightValue}.`;
+  }
 });
 
 onMounted(() => {
@@ -272,5 +293,18 @@ onUpdated(() => {
   font-size: 1.2rem;
   font-weight: bold;
   text-align: center;
+}
+
+/* Screen reader only class */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
 }
 </style> 

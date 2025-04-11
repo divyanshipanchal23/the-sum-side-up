@@ -1,51 +1,73 @@
 <template>
   <div class="number-input-container">
-    <div class="input-label" v-if="label">{{ label }}</div>
+    <label 
+      v-if="label" 
+      :for="`number-input-${_uid}`" 
+      class="block text-sm font-medium text-gray-700 mb-1"
+    >
+      {{ label }}
+    </label>
     
-    <div class="input-controls">
+    <div class="flex items-center">
       <button 
-        @click="decrementValue" 
-        class="control-button" 
-        :disabled="modelValue <= min"
+        v-if="showNumberButtons" 
+        @click="decrementValue"
+        :disabled="isAtMin"
+        class="decrement-btn rounded-l-md p-2 border border-gray-300 bg-gray-50 text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        :class="{ 'opacity-50 cursor-not-allowed': isAtMin }"
+        aria-label="Decrease value"
       >
-        -
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd" />
+        </svg>
       </button>
       
-      <input 
-        type="number" 
-        :value="modelValue" 
-        @input="updateValue($event)"
+      <input
+        :id="`number-input-${_uid}`"
+        type="number"
+        v-model="localValue"
         :min="min"
         :max="max"
         :step="step"
-        class="number-field"
+        class="block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+        :class="{ 'rounded-l-none rounded-r-none': showNumberButtons, 'rounded-md': !showNumberButtons }"
+        @input="handleInput"
+        @keydown.up.prevent="incrementValue"
+        @keydown.down.prevent="decrementValue"
+        :aria-valuemin="min"
+        :aria-valuemax="max"
+        :aria-valuenow="localValue"
+        :aria-label="ariaLabel || label || 'Number input'"
+        aria-live="polite"
       />
       
       <button 
-        @click="incrementValue" 
-        class="control-button" 
-        :disabled="modelValue >= max"
+        v-if="showNumberButtons" 
+        @click="incrementValue"
+        :disabled="isAtMax"
+        class="increment-btn rounded-r-md p-2 border border-gray-300 bg-gray-50 text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        :class="{ 'opacity-50 cursor-not-allowed': isAtMax }"
+        aria-label="Increase value"
       >
-        +
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+        </svg>
       </button>
     </div>
     
-    <div v-if="showNumberButtons" class="quick-number-buttons">
-      <button 
-        v-for="num in quickNumbers" 
-        :key="num" 
-        @click="setValue(num)"
-        class="quick-number-button"
-        :class="{ 'selected': modelValue === num }"
-      >
-        {{ num }}
-      </button>
+    <div v-if="error" class="mt-1 text-sm text-red-600" role="alert">
+      {{ error }}
+    </div>
+    
+    <div v-if="helperText" class="mt-1 text-sm text-gray-500">
+      {{ helperText }}
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
+import { useCurrentInstance } from 'vue';
 
 interface Props {
   modelValue: number;
@@ -53,145 +75,105 @@ interface Props {
   min?: number;
   max?: number;
   step?: number;
+  error?: string;
+  helperText?: string;
   showNumberButtons?: boolean;
-  quickNumbers?: number[];
+  ariaLabel?: string;
 }
 
+// Add a unique ID for the component
+const { proxy } = useCurrentInstance() as { proxy: { _uid: number } };
+const _uid = proxy._uid;
+
 const props = withDefaults(defineProps<Props>(), {
-  modelValue: 0,
-  label: '',
   min: 0,
-  max: 20,
+  max: 100,
   step: 1,
-  showNumberButtons: false,
-  quickNumbers: () => [1, 2, 3, 4, 5, 10]
+  showNumberButtons: false
 });
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: number): void
 }>();
 
-const updateValue = (event: Event) => {
-  const target = event.target as HTMLInputElement;
-  const value = parseInt(target.value);
+// Local value to handle input changes
+const localValue = ref(props.modelValue);
+
+// Computed properties for input states
+const isAtMin = computed(() => Number(localValue.value) <= props.min);
+const isAtMax = computed(() => Number(localValue.value) >= props.max);
+
+// Functions for increment and decrement
+function incrementValue() {
+  if (!isAtMax.value) {
+    const newValue = Number(localValue.value) + props.step;
+    // Ensure we don't exceed max value
+    localValue.value = Math.min(newValue, props.max);
+    emit('update:modelValue', Number(localValue.value));
+  }
+}
+
+function decrementValue() {
+  if (!isAtMin.value) {
+    const newValue = Number(localValue.value) - props.step;
+    // Ensure we don't go below min value
+    localValue.value = Math.max(newValue, props.min);
+    emit('update:modelValue', Number(localValue.value));
+  }
+}
+
+// Handle input changes
+function handleInput() {
+  // Convert to number and constrain between min and max
+  let newValue = Number(localValue.value);
   
-  if (!isNaN(value)) {
-    // Ensure the value is within the min/max bounds
-    const boundedValue = Math.min(Math.max(value, props.min), props.max);
-    console.log(`NumberInput: emitting update from ${props.modelValue} to ${boundedValue}`);
-    emit('update:modelValue', boundedValue);
+  // Handle NaN
+  if (isNaN(newValue)) {
+    newValue = props.min;
   }
-};
+  
+  // Clamp between min and max
+  newValue = Math.max(Math.min(newValue, props.max), props.min);
+  
+  // Update local value
+  localValue.value = newValue;
+  
+  // Emit the change
+  emit('update:modelValue', newValue);
+}
 
-const incrementValue = () => {
-  if (props.modelValue < props.max) {
-    const newValue = props.modelValue + props.step;
-    console.log(`NumberInput: incrementing from ${props.modelValue} to ${newValue}`);
-    emit('update:modelValue', newValue);
+// Watch for external changes
+watch(() => props.modelValue, (newValue) => {
+  // Only update if the values are different
+  if (Number(localValue.value) !== Number(newValue)) {
+    localValue.value = newValue;
   }
-};
+});
 
-const decrementValue = () => {
-  if (props.modelValue > props.min) {
-    const newValue = props.modelValue - props.step;
-    console.log(`NumberInput: decrementing from ${props.modelValue} to ${newValue}`);
-    emit('update:modelValue', newValue);
-  }
-};
-
-const setValue = (value: number) => {
-  console.log(`NumberInput: setting value from ${props.modelValue} to ${value}`);
-  emit('update:modelValue', value);
-};
+onMounted(() => {
+  // Ensure initial value is valid
+  handleInput();
+});
 </script>
 
 <style scoped>
 .number-input-container {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
   margin-bottom: 1rem;
 }
 
-.input-label {
-  font-weight: bold;
-  margin-bottom: 0.5rem;
-  color: #4b5563;
+/* Focus outline styles for better visibility */
+button:focus, input:focus {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
 }
 
-.input-controls {
-  display: flex;
-  align-items: center;
-  margin-bottom: 0.5rem;
+input[type="number"] {
+  -moz-appearance: textfield; /* Firefox */
 }
 
-.control-button {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: #6366f1;
-  color: white;
-  font-size: 1.5rem;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.control-button:hover:not(:disabled) {
-  background-color: #4f46e5;
-}
-
-.control-button:disabled {
-  background-color: #c7d2fe;
-  cursor: not-allowed;
-}
-
-.number-field {
-  width: 80px;
-  height: 40px;
-  text-align: center;
-  margin: 0 0.5rem;
-  font-size: 1.2rem;
-  border: 2px solid #d1d5db;
-  border-radius: 8px;
-  outline: none;
-}
-
-.number-field:focus {
-  border-color: #6366f1;
-}
-
-.quick-number-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
-}
-
-.quick-number-button {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: #e5e7eb;
-  color: #4b5563;
-  font-weight: bold;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.quick-number-button:hover {
-  background-color: #d1d5db;
-}
-
-.quick-number-button.selected {
-  background-color: #6366f1;
-  color: white;
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 </style> 

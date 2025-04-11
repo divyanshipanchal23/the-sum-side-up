@@ -23,6 +23,23 @@
               <span class="font-semibold text-gray-700">Level: </span>
               <span class="text-indigo-600 font-bold">{{ gameState.currentLevel }}</span>
             </div>
+            
+            <!-- Sound Control Button -->
+            <button 
+              @click="toggleMute" 
+              class="mx-4 p-2 rounded-full bg-gray-200 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              :title="isMuted ? 'Unmute sounds' : 'Mute sounds'"
+              aria-label="Toggle sound"
+            >
+              <svg v-if="isMuted" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+              </svg>
+              <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+              </svg>
+            </button>
+            
             <div class="score-info">
               <span class="font-semibold text-gray-700">Score: </span>
               <span class="text-indigo-600 font-bold">{{ gameState.successes }}/{{ gameState.attempts }}</span>
@@ -132,6 +149,7 @@ import { ref, computed, onMounted, watch, nextTick } from 'vue';
 import BalanceScale from '../components/BalanceScale.vue';
 import NumberInput from '../components/NumberInput.vue';
 import { useGameStore } from '../stores/gameStore';
+import soundService from '../services/soundService';
 
 const gameStore = useGameStore();
 const { 
@@ -161,6 +179,9 @@ const targetNumber = computed(() => {
 
 const gameStarted = ref(false);
 
+// Add a reactive reference for the mute state
+const isMuted = ref(soundService.getMuteState());
+
 // Watch for changes in the game state target number
 watch(() => gameState.targetNumber, (newVal, oldVal) => {
   console.log(`Target number changed in GameView: ${oldVal} -> ${newVal}`);
@@ -173,6 +194,9 @@ watch(() => gameState.addends, (newVal) => {
 
 async function startGame() {
   console.log('Starting game, setting gameStarted to true');
+  
+  // Play start sound
+  soundService.play('start');
   
   // First reset the game to initialize everything including target number
   console.log('Calling resetGame to initialize game state and set target number');
@@ -211,6 +235,13 @@ async function checkAnswer() {
   // Call checkBalance and explicitly handle the return value
   const isCorrect = checkBalance();
   
+  // Play sound based on result
+  if (isCorrect) {
+    soundService.play('correct');
+  } else {
+    soundService.play('incorrect');
+  }
+  
   // Wait for the next tick to ensure the UI state is updated
   await nextTick();
   
@@ -243,12 +274,29 @@ async function checkAnswer() {
 }
 
 async function nextProblem() {
+  // Play level up sound if advancing to next level
+  if ((gameState.successes / gameState.attempts) >= 0.8 && gameState.attempts >= 5) {
+    soundService.play('levelUp');
+  } else {
+    soundService.play('click');
+  }
+  
   startNewGame();
   
   // Wait for the next tick to ensure state synchronization
   await nextTick();
   
   console.log('New problem started with target number:', gameState.targetNumber);
+}
+
+// Function to toggle mute
+function toggleMute() {
+  const newMuteState = soundService.toggleMute();
+  isMuted.value = newMuteState;
+  // Play a click sound if we're unmuting
+  if (!isMuted.value) {
+    soundService.play('click');
+  }
 }
 
 onMounted(() => {
