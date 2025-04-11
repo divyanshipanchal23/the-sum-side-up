@@ -25,6 +25,12 @@ const routes = [
     name: 'Configuration',
     component: () => import('../views/ConfigView.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/progress',
+    name: 'Progress',
+    component: () => import('../views/ProgressView.vue'),
+    meta: { requiresAuth: true }
   }
 ];
 
