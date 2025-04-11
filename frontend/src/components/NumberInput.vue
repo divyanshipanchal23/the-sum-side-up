@@ -2,7 +2,7 @@
   <div class="number-input-container">
     <label 
       v-if="label" 
-      :for="`number-input-${_uid}`" 
+      :for="`number-input-${inputId}`" 
       class="block text-sm font-medium text-gray-700 mb-1"
     >
       {{ label }}
@@ -23,7 +23,7 @@
       </button>
       
       <input
-        :id="`number-input-${_uid}`"
+        :id="`number-input-${inputId}`"
         type="number"
         v-model="localValue"
         :min="min"
@@ -67,7 +67,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
-import { useCurrentInstance } from 'vue';
+import { v4 as uuidv4 } from 'uuid';
 
 interface Props {
   modelValue: number;
@@ -81,9 +81,8 @@ interface Props {
   ariaLabel?: string;
 }
 
-// Add a unique ID for the component
-const { proxy } = useCurrentInstance() as { proxy: { _uid: number } };
-const _uid = proxy._uid;
+// Generate a unique ID for the component
+const inputId = uuidv4().substring(0, 8);
 
 const props = withDefaults(defineProps<Props>(), {
   min: 0,

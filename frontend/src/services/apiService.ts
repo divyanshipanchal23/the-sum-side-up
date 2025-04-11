@@ -1,7 +1,7 @@
 import { useAuthStore } from '../stores/authStore';
 
-// Backend API URL - this would come from environment variables in a real app
-const API_URL = 'http://localhost:8000';
+// Get Backend API URL from environment variables
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 /**
  * API Service for making authenticated requests to the backend

@@ -2,15 +2,14 @@ import { initializeApp } from 'firebase/app';
 import { getAuth, connectAuthEmulator } from 'firebase/auth';
 import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 
-// For development, we'll use placeholder config values
-// In production, these would be environment variables
+// Get Firebase config from environment variables
 const firebaseConfig = {
-  apiKey: "AIzaSyDevelopmentKeyPlaceholder",
-  authDomain: "balance-scale-game.firebaseapp.com",
-  projectId: "balance-scale-game",
-  storageBucket: "balance-scale-game.appspot.com",
-  messagingSenderId: "123456789012",
-  appId: "1:123456789012:web:abcdef1234567890"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
 // Initialize Firebase
@@ -22,15 +21,15 @@ const auth = getAuth(app);
 // Initialize Firestore
 const firestore = getFirestore(app);
 
-// Enable emulators in development mode
-if (import.meta.env.DEV) {
+// Enable emulators if configured
+if (import.meta.env.VITE_USE_EMULATORS === 'true') {
   // Use Firebase Auth Emulator
   connectAuthEmulator(auth, 'http://localhost:9099');
   
   // Use Firestore Emulator
   connectFirestoreEmulator(firestore, 'localhost', 8080);
   
-  console.log('Using Firebase emulators in development mode');
+  console.log('Using Firebase emulators');
 }
 
 export { app, auth, firestore }; 

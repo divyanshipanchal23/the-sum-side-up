@@ -1,5 +1,16 @@
 <script setup lang="ts">
-// App component is now just a router view container
+import { onMounted } from 'vue';
+import resourceService from './services/resourceService';
+
+// Preload game resources when the app is mounted
+onMounted(() => {
+  // Preload game resources in the background
+  resourceService.preloadGameResources().then(() => {
+    console.log('All game resources preloaded');
+  }).catch(error => {
+    console.warn('Failed to preload some resources:', error);
+  });
+});
 </script>
 
 <template>

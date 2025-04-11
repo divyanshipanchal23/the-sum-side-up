@@ -6,38 +6,52 @@ const routes = [
   {
     path: '/',
     name: 'Home',
-    component: () => import('../views/HomeView.vue')
+    component: () => import(/* webpackChunkName: "home" */ '../views/HomeView.vue')
   },
   {
     path: '/game',
     name: 'Game',
-    component: () => import('../views/GameView.vue'),
+    component: () => import(/* webpackChunkName: "game" */ '../views/GameView.vue'),
     meta: { requiresAuth: true }
   },
   {
     path: '/auth',
     name: 'Auth',
-    component: () => import('../views/AuthView.vue'),
+    component: () => import(/* webpackChunkName: "auth" */ '../views/AuthView.vue'),
     meta: { guestOnly: true }
   },
   {
     path: '/config',
     name: 'Configuration',
-    component: () => import('../views/ConfigView.vue'),
+    component: () => import(/* webpackChunkName: "config" */ '../views/ConfigView.vue'),
     meta: { requiresAuth: true }
   },
   {
     path: '/progress',
     name: 'Progress',
-    component: () => import('../views/ProgressView.vue'),
+    component: () => import(/* webpackChunkName: "progress" */ '../views/ProgressView.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    // Catch all route for 404
+    path: '/:pathMatch(.*)*',
+    name: 'NotFound',
+    component: () => import(/* webpackChunkName: "not-found" */ '../views/NotFoundView.vue')
   }
 ];
 
 // Create router instance
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
-  routes
+  routes,
+  // Scroll behavior restoration
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) {
+      return savedPosition;
+    } else {
+      return { top: 0 };
+    }
+  }
 });
 
 // Navigation guards

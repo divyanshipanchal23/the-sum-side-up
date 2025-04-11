@@ -16,5 +16,37 @@ export default defineConfig({
   },
   css: {
     devSourcemap: true
+  },
+  build: {
+    // Generate source maps for production builds
+    sourcemap: true,
+    
+    // Optimize the build
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true, // Remove console.log in production
+        drop_debugger: true // Remove debugger statements
+      }
+    },
+    
+    // Split chunks for better caching
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vue-vendor': ['vue', 'vue-router', 'pinia'],
+          'firebase': ['firebase/app', 'firebase/auth', 'firebase/firestore'],
+          'ui': ['howler']
+        }
+      }
+    },
+    
+    // Reduce chunk size warning limit
+    chunkSizeWarningLimit: 1000
+  },
+  server: {
+    port: 5173,
+    strictPort: true,
+    host: true // Listen on all local IPs
   }
 })
