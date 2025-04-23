@@ -14,7 +14,7 @@
       <!-- Beam with pivot point -->
       <div 
         class="scale-beam" 
-        :class="{ 'tilted-left': tilt < 0, 'tilted-right': tilt > 0, 'balanced': tilt === 0 }"
+        :class="{ 'tilted-left': tilt > 0, 'tilted-right': tilt < 0, 'balanced': tilt === 0 }"
         :style="{ transform: `translateX(-50%) rotate(${tilt}deg)` }"
       >
         <div class="pivot-point"></div>
@@ -48,11 +48,11 @@
     </div>
     
     <div class="scale-feedback" v-if="showFeedback" aria-live="assertive">
-      <div v-if="tilt < 0" class="text-red-500">
-        Left side is heavier
-      </div>
-      <div v-else-if="tilt > 0" class="text-red-500">
+      <div v-if="tilt > 0" class="text-red-500">
         Right side is heavier
+      </div>
+      <div v-else-if="tilt < 0" class="text-red-500">
+        Left side is heavier
       </div>
       <div v-else class="text-green-500">
         The scale is balanced!
@@ -107,9 +107,10 @@ const tilt = computed(() => {
   
   // Calculate the angle with a maximum tilt of 15 degrees
   // Use a hyperbolic tangent function to create a smooth transition
+  // Added negative sign to make the beam tilt down on the heavier side
   const maxAngle = 15; // maximum rotation in degrees
   const scaleFactor = 0.1; // controls how quickly it reaches max angle
-  const angle = Math.tanh(diff * scaleFactor) * maxAngle;
+  const angle = -1 * Math.tanh(diff * scaleFactor) * maxAngle;
   
   return angle;
 });
@@ -170,10 +171,10 @@ onMounted(() => {
 
 // Computed property for screen reader descriptions
 const getBalanceDescription = computed(() => {
-  if (tilt.value < 0) {
-    return `The scale is tilted to the left. ${leftValue.value} is greater than ${rightValue.value}.`;
-  } else if (tilt.value > 0) {
+  if (tilt.value > 0) {
     return `The scale is tilted to the right. ${leftValue.value} is less than ${rightValue.value}.`;
+  } else if (tilt.value < 0) {
+    return `The scale is tilted to the left. ${leftValue.value} is greater than ${rightValue.value}.`;
   } else {
     return `The scale is balanced. ${leftValue.value} equals ${rightValue.value}.`;
   }
