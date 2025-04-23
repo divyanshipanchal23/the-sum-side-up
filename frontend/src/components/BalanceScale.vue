@@ -1,7 +1,7 @@
 <template>
   <div 
     class="balance-scale-container" 
-    :key="`scale-${leftValue}-${rightValue}-${forceUpdate}`"
+    :key="`scale-${leftValue}-${rightValue}`"
     role="img" 
     :aria-label="`Balance scale with ${leftValue} on the left side and ${rightValue} on the right side. ${getBalanceDescription}`"
   >
@@ -37,6 +37,16 @@
       </div>
     </div>
     
+    <!-- Display the values numerically for clarity -->
+    <div class="scale-values flex justify-between w-full px-8 mt-2">
+      <div class="left-value text-blue-600 font-semibold">
+        Left: {{ leftValue }}
+      </div>
+      <div class="right-value text-indigo-600 font-semibold">
+        Right: {{ rightValue }}
+      </div>
+    </div>
+    
     <div class="scale-feedback" v-if="showFeedback" aria-live="assertive">
       <div v-if="tilt < 0" class="text-red-500">
         Left side is heavier
@@ -57,96 +67,116 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, onMounted, onUpdated, nextTick } from 'vue';
+import { ref, computed, watch, onMounted, nextTick } from 'vue';
+import { useGameStore } from '@/stores/gameStore';
 
-interface Props {
-  leftValue?: number;
-  rightValue?: number;
+const props = defineProps<{
+  leftValue: number;
+  rightValue: number;
   showFeedback?: boolean;
-}
+  showBalanceLine?: boolean;
+}>();
 
-const props = withDefaults(defineProps<Props>(), {
-  leftValue: 0,
-  rightValue: 0,
-  showFeedback: true
+// Expose reset method to parent component
+defineExpose({
+  resetScale
 });
 
-// For forcing re-renders when values change
-const forceUpdate = ref(0);
+// Set up game store for target number
+const gameStore = useGameStore();
+// Create a computed property to access the targetNumber
+const targetNumber = computed(() => gameStore.targetNumber);
 
-// Log when props change (for debugging)
-watch(() => props.leftValue, (newVal, oldVal) => {
-  console.log(`LeftValue changed: ${oldVal} -> ${newVal}`);
-  forceUpdate.value++;
+// Create internal refs for left and right values to avoid direct prop binding issues
+const leftValue = ref(Number(props.leftValue) || 0);
+const rightValue = ref(Number(props.rightValue) || 0);
+
+// Computed property for whether the scale is balanced
+const isBalanced = computed(() => {
+  const tolerance = 0.0001; // Small tolerance for floating point errors
+  return Math.abs(leftValue.value - rightValue.value) <= tolerance;
+});
+
+// Computed property for tilt calculation based on internal values
+const tilt = computed(() => {
+  // Skip calculation if both values are zero
+  if (leftValue.value === 0 && rightValue.value === 0) return 0;
+  
+  // Get the difference between left and right
+  const diff = leftValue.value - rightValue.value;
+  
+  // Calculate the angle with a maximum tilt of 15 degrees
+  // Use a hyperbolic tangent function to create a smooth transition
+  const maxAngle = 15; // maximum rotation in degrees
+  const scaleFactor = 0.1; // controls how quickly it reaches max angle
+  const angle = Math.tanh(diff * scaleFactor) * maxAngle;
+  
+  return angle;
+});
+
+// Feedback message based on balance state
+const feedbackMessage = computed(() => {
+  if (isBalanced.value) {
+    return 'Balanced!';
+  } else if (leftValue.value > rightValue.value) {
+    const diff = leftValue.value - rightValue.value;
+    return `Left side is heavier by ${diff.toFixed(1)}`;
+  } else {
+    const diff = rightValue.value - leftValue.value;
+    return `Right side is heavier by ${diff.toFixed(1)}`;
+  }
+});
+
+// Watch props to update internal values
+watch(() => props.leftValue, (newValue) => {
+  const numValue = Number(newValue);
+  console.log(`Left prop changed to ${newValue}, setting leftValue to ${numValue}`);
+  leftValue.value = numValue;
 }, { immediate: true });
 
-// Add a more explicit watcher for the rightValue (target number)
-watch(() => props.rightValue, async (newVal, oldVal) => {
-  console.log(`RightValue (target) changed: ${oldVal} -> ${newVal}`);
-  
-  if (newVal !== oldVal) {
-    console.log('Target number changed, forcing scale update');
-    forceUpdate.value += 2;
+watch(() => props.rightValue, (newValue) => {
+  const numValue = Number(newValue);
+  console.log(`Right prop changed to ${newValue}, setting rightValue to ${numValue}`);
+  rightValue.value = numValue;
+}, { immediate: true });
+
+// Watch target number to detect changes
+watch(() => targetNumber.value, (newValue, oldValue) => {
+  if (newValue !== oldValue) {
+    console.log(`Target number changed in BalanceScale: ${oldValue} -> ${newValue}`);
     
-    // Use nextTick to ensure DOM updates
-    await nextTick();
-    
-    // Additional update to ensure any transitions complete
-    setTimeout(() => {
-      forceUpdate.value += 1;
-      console.log('Force updated scale after target change');
-    }, 100);
+    // Reset internal values when target changes
+    if (props.rightValue !== rightValue.value) {
+      console.log(`Resetting rightValue from ${rightValue.value} to ${props.rightValue}`);
+      rightValue.value = Number(props.rightValue);
+    }
   }
 }, { immediate: true });
 
-// Calculate the tilt based on the difference between leftValue and rightValue
-const tilt = computed(() => {
-  // Explicitly convert values to numbers to avoid any string comparison issues
-  const leftNum = Number(props.leftValue);
-  const rightNum = Number(props.rightValue);
-  const diff = leftNum - rightNum;
-  
-  console.log(`Calculating tilt: leftValue=${leftNum}, rightValue=${rightNum}, diff=${diff}`);
-  
-  // Cap the tilt to a maximum of 15 degrees in either direction
-  const maxTilt = 15;
-  if (diff === 0) return 0;
-  
-  // Apply a non-linear tilt to make small differences more visible
-  // Use a cubic function to increase sensitivity for small differences
-  
-  // When left > right, diff is positive, we want a negative tilt (left down)
-  // When left < right, diff is negative, we want a positive tilt (right down)
-  const direction = diff > 0 ? -1 : 1;
-  const tiltAngle = direction * Math.min(Math.pow(Math.abs(diff), 1/3) * 5, maxTilt);
-  
-  console.log(`Calculated tilt angle: ${tiltAngle}`);
-  return tiltAngle;
+// Function to reset the scale when called from parent
+function resetScale() {
+  console.log('Resetting scale values to defaults');
+  leftValue.value = Number(props.leftValue) || 0;
+  rightValue.value = Number(props.rightValue) || 0;
+}
+
+onMounted(() => {
+  console.log('BalanceScale mounted with values:', { 
+    left: props.leftValue, 
+    right: props.rightValue,
+    target: targetNumber.value
+  });
 });
 
 // Computed property for screen reader descriptions
 const getBalanceDescription = computed(() => {
   if (tilt.value < 0) {
-    return `The scale is tilted to the left. ${props.leftValue} is greater than ${props.rightValue}.`;
+    return `The scale is tilted to the left. ${leftValue.value} is greater than ${rightValue.value}.`;
   } else if (tilt.value > 0) {
-    return `The scale is tilted to the right. ${props.leftValue} is less than ${props.rightValue}.`;
+    return `The scale is tilted to the right. ${leftValue.value} is less than ${rightValue.value}.`;
   } else {
-    return `The scale is balanced. ${props.leftValue} equals ${props.rightValue}.`;
+    return `The scale is balanced. ${leftValue.value} equals ${rightValue.value}.`;
   }
-});
-
-onMounted(() => {
-  console.log("BalanceScale mounted");
-  console.log(`Initial values: leftValue=${props.leftValue}, rightValue=${props.rightValue}`);
-  
-  // Force an initial update regardless of the value
-  forceUpdate.value += 1;
-  console.log("Forced initial update on mount");
-});
-
-onUpdated(() => {
-  console.log("BalanceScale updated");
-  console.log(`Current values: leftValue=${props.leftValue}, rightValue=${props.rightValue}, tilt=${tilt.value}`);
 });
 </script>
 
@@ -306,5 +336,19 @@ onUpdated(() => {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border-width: 0;
+}
+
+.scale-info {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 10px;
+  font-size: 0.8rem;
+  color: #777;
+}
+
+.scale-value {
+  background-color: #f0f0f0;
+  padding: 2px 6px;
+  border-radius: 4px;
 }
 </style> 

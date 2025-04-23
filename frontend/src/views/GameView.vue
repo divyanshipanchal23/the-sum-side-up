@@ -57,6 +57,7 @@
             :leftValue="sum" 
             :rightValue="targetNumber" 
             :showFeedback="true"
+            :key="`scale-${targetNumber}-${Date.now()}`"
             class="mb-8"
           >
             <template #right-content>
@@ -158,17 +159,13 @@ const gameStore = useGameStore();
 const authStore = useAuthStore();
 const route = useRoute();
 
-const { 
-  config, 
-  gameState, 
-  sum: storeSum, 
-  isBalanced, 
-  startNewGame, 
-  setAddend, 
-  checkBalance,
-  resetGame,
-  setTargetNumberDirectly
-} = gameStore;
+// Instead of destructuring the computed properties from the store
+// Access them directly from the store instance to ensure reactivity
+const config = computed(() => gameStore.config);
+const gameState = computed(() => gameStore.gameState);
+const targetNumber = computed(() => gameStore.targetNumber);
+const storeSum = computed(() => gameStore.sum);
+const isBalanced = computed(() => gameStore.isBalanced);
 
 // Get the configuration ID from the route params if available
 const configId = computed(() => route.query.configId as string || 'default');
@@ -179,31 +176,24 @@ const timeSpent = ref(0);
 
 // Create a local computed property to ensure reactivity
 const sum = computed(() => {
-  console.log('Computing sum in GameView', gameState.addends);
   // Explicitly convert each addend to a number to avoid string concatenation
-  return gameState.addends.reduce((acc, val) => Number(acc) + Number(val), 0);
+  return gameState.value.addends.reduce((acc, val) => Number(acc) + Number(val), 0);
 });
 
-// Create a local computed property for the target number to ensure reactivity
-const targetNumber = computed(() => {
-  console.log('Getting target number in GameView:', gameState.targetNumber);
-  return gameState.targetNumber;
-});
+// Watch for changes in the addends array
+watch(() => gameState.value.addends, (newVal) => {
+  console.log('Addends changed in GameView', newVal);
+}, { deep: true });
+
+// Watch the target number for debugging purposes
+watch(() => targetNumber.value, (newVal, oldVal) => {
+  console.log(`Target number changed: ${oldVal} -> ${newVal}`);
+}, { immediate: true });
 
 const gameStarted = ref(false);
 
 // Add a reactive reference for the mute state
 const isMuted = ref(soundService.getMuteState());
-
-// Watch for changes in the game state target number
-watch(() => gameState.targetNumber, (newVal, oldVal) => {
-  console.log(`Target number changed in GameView: ${oldVal} -> ${newVal}`);
-}, { immediate: true });
-
-// Watch for changes in the addends array
-watch(() => gameState.addends, (newVal) => {
-  console.log('Addends changed in GameView', newVal);
-}, { deep: true });
 
 async function startGame() {
   console.log('Starting game, setting gameStarted to true');
@@ -213,7 +203,22 @@ async function startGame() {
   
   // First reset the game to initialize everything including target number
   console.log('Calling resetGame to initialize game state and set target number');
-  resetGame();
+  await gameStore.resetGame();
+  
+  // Explicitly ensure the level is set to 1
+  if (gameState.value.currentLevel !== 1) {
+    console.log(`Resetting level from ${gameState.value.currentLevel} to 1`);
+    gameState.value.currentLevel = 1;
+  }
+  
+  // Log initial game state
+  console.log('Initial game state:', {
+    level: gameState.value.currentLevel,
+    targetNumber: targetNumber.value,
+    addends: gameState.value.addends,
+    attempts: gameState.value.attempts,
+    successes: gameState.value.successes
+  });
   
   // Wait for the next tick to ensure state is updated
   await nextTick();
@@ -225,14 +230,14 @@ async function startGame() {
   startTime.value = new Date();
   
   // Verify the target number after reset
-  console.log('Game started with target number:', gameState.targetNumber);
+  console.log('Game started with target number:', targetNumber.value);
 }
 
 function updateAddend(index: number, value: number) {
-  console.log(`Updating addend ${index} from ${gameState.addends[index]} to ${value} (types: ${typeof gameState.addends[index]} -> ${typeof value})`);
-  setAddend(index, value);
+  console.log(`Updating addend ${index} from ${gameState.value.addends[index]} to ${value}`);
+  gameStore.setAddend(index, value);
   
-  // Log the resulting sum and check if it matches the target number
+  // Log the resulting sum
   setTimeout(() => {
     console.log(`After update - Sum: ${sum.value}, Target: ${targetNumber.value}, isBalanced: ${isBalanced.value}`);
   }, 0);
@@ -247,94 +252,125 @@ async function checkAnswer() {
     timeSpent.value = (endTime.getTime() - startTime.value.getTime()) / 1000; // Convert to seconds
   }
   
-  // Ensure target number is synchronized before checking
-  // This is crucial for consistent checking
-  setTargetNumberDirectly(targetNumber.value);
+  // Add explicit sum vs target comparison for extra reliability
+  const sumValue = Number(sum.value);
+  const targetValue = Number(targetNumber.value);
+  const tolerance = 0.0001;
+  const isManuallyCorrect = Math.abs(sumValue - targetValue) <= tolerance;
   
-  // Wait for the next tick to ensure state synchronization
-  await nextTick();
+  console.log(`Manual balance check: sum=${sumValue}, target=${targetValue}, isEqual=${isManuallyCorrect}`);
   
   // Call checkBalance and explicitly handle the return value
-  const isCorrect = checkBalance();
+  const isCorrect = await gameStore.checkBalance();
+  
+  // Use either method to determine correctness - prioritize the direct comparison
+  const finalResult = isManuallyCorrect || isCorrect;
+  
+  console.log(`Balance check results - direct: ${isManuallyCorrect}, store: ${isCorrect}, final: ${finalResult}`);
   
   // Play sound based on result
-  if (isCorrect) {
+  if (finalResult) {
     soundService.play('correct');
   } else {
     soundService.play('incorrect');
+    // Ensure the lastAttemptCorrect is set to false for incorrect answers
+    gameState.value.lastAttemptCorrect = false;
+  }
+  
+  // If we need to force the game state to reflect the correct result
+  if (finalResult && !isCorrect) {
+    console.log("Manual override: Setting game state to correct answer");
+    gameState.value.lastAttemptCorrect = true;
+    gameState.value.isComplete = true;
   }
   
   // Record the attempt if user is authenticated
   if (authStore.isAuthenticated) {
     try {
-      // Create attempt record
-      const attempt: GameAttempt = {
-        userId: authStore.userId,
-        activityId: configId.value,
-        timestamp: new Date(),
-        target: targetNumber.value,
-        inputs: [...gameState.addends], // Make a copy of the addends array
-        success: isCorrect,
-        timeSpent: timeSpent.value
-      };
+      const userId = authStore.user?.uid;
       
-      // Record the attempt
-      await progressService.recordAttempt(attempt);
-      console.log('Game attempt recorded successfully');
+      // Only record if we have a valid user ID
+      if (userId) {
+        const attempt: GameAttempt = {
+          userId,
+          activityId: configId.value,
+          timestamp: new Date(),
+          target: targetNumber.value,
+          inputs: [...gameState.value.addends],
+          success: finalResult,
+          timeSpent: timeSpent.value,
+          level: gameState.value.currentLevel
+        };
+        
+        console.log(`Sending attempt with data:`, attempt);
+        await progressService.recordAttempt(attempt);
+        console.log('Game attempt recorded successfully');
+      }
     } catch (error) {
-      console.error('Failed to record game attempt:', error);
+      console.error('Failed to record attempt:', error);
     }
   }
   
-  // Wait for the next tick to ensure the UI state is updated
-  await nextTick();
-  
-  // Log the state after checking
+  // Update the game state with a fresh reference to ensure reactivity
   console.log('After check - Current game state:', {
-    result: gameState.lastAttemptCorrect,
-    target: targetNumber.value,
-    isComplete: gameState.isComplete,
-    attempts: gameState.attempts,
-    successes: gameState.successes
+    result: gameState.value.lastAttemptCorrect,
+    isComplete: gameState.value.isComplete,
+    attempts: gameState.value.attempts,
+    successes: gameState.value.successes,
+    target: targetNumber.value
   });
-  
-  // Check local values vs game state to ensure synchronization
-  console.log(`Local vs Store - sum: ${sum.value}, target: ${targetNumber.value}, gameStateTarget: ${gameState.targetNumber}`);
-  
-  // Force a complete state refresh if needed by creating a new reference
-  if (isCorrect && gameState.lastAttemptCorrect !== true) {
-    console.log("Forcing complete state refresh for correct answer");
-    
-    // Create a new state object with all properties to force reactivity
-    const updatedState = {
-      ...gameState,
-      lastAttemptCorrect: true,
-      isComplete: true
-    };
-    
-    // Update the state with the new object
-    Object.assign(gameState, updatedState);
-  }
 }
 
 async function nextProblem() {
-  // Play level up sound if advancing to next level
-  if ((gameState.successes / gameState.attempts) >= 0.8 && gameState.attempts >= 5) {
+  // Explicitly check level-up conditions and call levelUp if needed
+  // This ensures the level-up happens even if the checkBalance function didn't trigger it
+  const successRateValue = (gameState.value.successes / gameState.value.attempts) * 100;
+  console.log(`Level-up check - Attempts: ${gameState.value.attempts}, Successes: ${gameState.value.successes}, Rate: ${successRateValue}%`);
+  if (successRateValue >= 80 && gameState.value.attempts >= 5) {
+    console.log(`Level-up conditions met! Calling levelUp() explicitly`);
+    // Call levelUp from gameStore directly with await to ensure it completes
+    await gameStore.levelUp();
     soundService.play('levelUp');
   } else {
     soundService.play('click');
   }
   
-  startNewGame();
+  // Important: Reset isComplete and lastAttemptCorrect before starting a new game
+  gameState.value.isComplete = false;
+  gameState.value.lastAttemptCorrect = null;
+  
+  console.log('Starting new game...');
+  
+  // Start a new game with fresh state and get the new target
+  // Use await to ensure it completes
+  await gameStore.startNewGame();
   
   // Reset the timer for the next problem
   startTime.value = new Date();
   timeSpent.value = 0;
   
-  // Wait for the next tick to ensure state synchronization
+  // Explicit reset of addends to ensure they're all 0
+  // Create a completely fresh addends array
+  const maxAddends = config.value.maxAddends;
+  const freshAddends = Array(maxAddends).fill(0);
+  
+  // Update the game state with these fresh addends
+  gameState.value.addends = freshAddends;
+  
+  console.log('Explicitly reset addends to:', gameState.value.addends);
+  console.log('New problem started with target:', targetNumber.value);
+  
+  // Print the current level after potentially leveling up
+  console.log(`Current level after nextProblem: ${gameState.value.currentLevel}`);
+  
+  // Wait for the next tick to ensure state is refreshed before continuing
   await nextTick();
   
-  console.log('New problem started with target number:', gameState.targetNumber);
+  // Reset the BalanceScale component if we have a ref to it
+  const balanceScaleRef = ref<InstanceType<typeof BalanceScale> | null>(null);
+  if (balanceScaleRef.value) {
+    balanceScaleRef.value.resetScale();
+  }
 }
 
 // Function to toggle mute
@@ -347,20 +383,13 @@ function toggleMute() {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   // Initialize the game when the component mounts to ensure a valid target number is set
   console.log('GameView mounted, initializing game state');
   
-  // Generate an initial random target number
-  const min = config.targetRange.min;
-  const max = config.targetRange.max;
-  const randomTarget = Math.floor(Math.random() * (max - min + 1)) + min;
+  // Reset the game to get a fresh start
+  await gameStore.resetGame();
   
-  console.log(`Setting initial random target from range ${min}-${max}: ${randomTarget}`);
-  
-  // Set the initial target number using the synchronized method
-  setTargetNumberDirectly(randomTarget);
-  
-  console.log('Initial target number set to:', gameState.targetNumber);
+  console.log('Initial target number set to:', targetNumber.value);
 });
 </script> 

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, nextTick } from 'vue';
 
 export interface GameConfig {
   minValue: number;
@@ -37,9 +37,10 @@ export const useGameStore = defineStore('game', () => {
     hintsEnabled: true
   });
 
-  // Internal target tracking to ensure consistency
-  const _internalTarget = ref<number>(0);
-
+  // **TRUE SINGLE SOURCE OF TRUTH**
+  // Use a single ref for the target number - nothing else should store this value
+  const _targetNumber = ref<number>(0);
+  
   // Generate a random target number within the configured range
   function generateTargetNumber(): number {
     const min = config.value.targetRange.min;
@@ -47,17 +48,19 @@ export const useGameStore = defineStore('game', () => {
     const randomTarget = Math.floor(Math.random() * (max - min + 1)) + min;
     console.log(`Generated new target number: ${randomTarget} (range: ${min}-${max})`);
     
-    // Update the internal target
-    _internalTarget.value = randomTarget;
+    // Update our single source of truth
+    _targetNumber.value = randomTarget;
     
     return randomTarget;
   }
 
-  // Game state - initialize with a valid target number from the start
+  // Initialize with a valid target number
   const initialTarget = generateTargetNumber();
-  const gameState = ref<GameState>({
-    targetNumber: initialTarget,
-    addends: [0, 0],
+  
+  // Game state - now the targetNumber is a COMPUTED property based on _targetNumber
+  const gameState = ref<Omit<GameState, 'targetNumber'> & { _targetNumberPlaceholder?: number }>({
+    _targetNumberPlaceholder: initialTarget, // Only here for initialization compatibility
+    addends: Array(config.value.maxAddends).fill(0),
     attempts: 0,
     successes: 0,
     currentLevel: 1,
@@ -65,49 +68,34 @@ export const useGameStore = defineStore('game', () => {
     lastAttemptCorrect: null
   });
 
-  // Watch for external changes to the target number and synchronize
-  watch(() => gameState.value.targetNumber, (newTarget) => {
-    console.log(`Target number was externally changed to: ${newTarget}, syncing internal state`);
-    _internalTarget.value = newTarget;
+  // Create targetNumber as a computed property that reads from _targetNumber
+  // This creates a one-way dependency, ensuring state.targetNumber always reflects _targetNumber
+  const targetNumber = computed({
+    get: () => _targetNumber.value,
+    // No setter - must use setTargetNumber function instead
   });
 
   // Computed properties
   const sum = computed(() => {
-    console.log('Calculating sum in store:', gameState.value.addends);
     // Explicitly convert all addends to numbers
     const result = gameState.value.addends.reduce((acc, val) => Number(acc) + Number(val), 0);
-    console.log(`Store sum calculation result: ${result} (type: ${typeof result})`);
     return result;
   });
 
   const isBalanced = computed(() => {
     // Ensure both values are converted to numbers explicitly
     const sumValue = Number(sum.value);
-    
-    // IMPORTANT: Use the internal target for consistency
-    const targetValue = Number(_internalTarget.value);
-    
-    // Double check that the values are in sync
-    if (targetValue !== Number(gameState.value.targetNumber)) {
-      console.warn(`Target mismatch detected! UI: ${gameState.value.targetNumber}, Internal: ${_internalTarget.value}`);
-      // Synchronize the values
-      gameState.value.targetNumber = _internalTarget.value;
-    }
-    
-    // Log the types and values for debugging
-    console.log(`Checking balance - sum: ${sumValue} (${typeof sumValue}), target: ${targetValue} (${typeof targetValue})`);
-    console.log(`Target number in gameState: ${gameState.value.targetNumber}, internal target: ${_internalTarget.value}`);
+    const targetValue = Number(_targetNumber.value);
     
     // Use a small tolerance for potential floating-point precision issues
     const tolerance = 0.0001;
     const isEqual = Math.abs(sumValue - targetValue) <= tolerance;
     
-    console.log(`Balance check result: ${isEqual} (with tolerance: ${tolerance})`);
     return isEqual;
   });
 
   const difference = computed(() => {
-    return sum.value - gameState.value.targetNumber;
+    return sum.value - _targetNumber.value;
   });
 
   const successRate = computed(() => {
@@ -115,28 +103,50 @@ export const useGameStore = defineStore('game', () => {
     return (gameState.value.successes / gameState.value.attempts) * 100;
   });
 
+  // Action to set the target number (the ONLY way to update it)
+  async function setTargetNumber(newTarget: number) {
+    console.log(`Setting target number to: ${newTarget}`);
+    _targetNumber.value = Number(newTarget);
+    
+    // Wait for the next tick to ensure Vue has processed the state change
+    await nextTick();
+    
+    // Return the target for confirmation
+    return _targetNumber.value;
+  }
+
   // Actions
-  function startNewGame() {
+  async function startNewGame() {
     // Generate a new target number based on the current config
     const newTarget = generateTargetNumber();
     console.log(`Starting new game with target number: ${newTarget}`);
     
-    // Create a new state object to ensure full reactivity
+    // Reset the addends array based on the current config
+    const newAddends = Array(config.value.maxAddends).fill(0);
+    
+    // Create a completely fresh state object for maximum reactivity
+    // Note: We don't include targetNumber in this object since it's a computed property
     gameState.value = {
-      ...gameState.value,
-      targetNumber: newTarget,
-      addends: Array(config.value.maxAddends).fill(0),
+      addends: newAddends,
+      attempts: gameState.value.attempts, // keep the attempts count
+      successes: gameState.value.successes, // keep the successes count
+      currentLevel: gameState.value.currentLevel, // keep the current level
       isComplete: false,
       lastAttemptCorrect: null
     };
     
-    console.log('Started new game with target:', gameState.value.targetNumber, 'internal:', _internalTarget.value);
+    // Wait for the next tick to ensure synchronization
+    await nextTick();
+    
+    // Log the start of a new game
+    console.log(`Started new game with target: ${_targetNumber.value}`);
+    
+    // Return the target number for confirmation
+    return _targetNumber.value;
   }
 
   function setAddend(index: number, value: number) {
     if (index >= 0 && index < gameState.value.addends.length) {
-      console.log(`Store: setting addend ${index} from ${gameState.value.addends[index]} to ${value}`);
-      
       // Ensure the value is stored as a number
       const numericValue = Number(value);
       
@@ -146,96 +156,116 @@ export const useGameStore = defineStore('game', () => {
       
       // Important: Replace the entire array with the new one
       gameState.value.addends = newAddends;
-      
-      console.log('Store: new addends array:', gameState.value.addends);
-      console.log('Store: new sum:', sum.value);
     }
   }
 
-  function checkBalance() {
-    // Verify target number consistency before checking
-    if (_internalTarget.value !== gameState.value.targetNumber) {
-      console.warn(`Target number inconsistency detected during checkBalance!`);
-      console.warn(`Internal: ${_internalTarget.value}, GameState: ${gameState.value.targetNumber}`);
-      // Force synchronization
-      gameState.value.targetNumber = _internalTarget.value;
-    }
-    
-    // Get current target and sum values before checking
-    const currentTarget = gameState.value.targetNumber;
+  async function checkBalance() {
+    // Get current values
+    const currentTarget = _targetNumber.value;
     const currentSum = sum.value;
     
-    console.log(`Checking balance with target=${currentTarget}, sum=${currentSum}, internal=${_internalTarget.value}`);
-    
-    // Calculate the balance result upfront to ensure consistency
+    // Calculate the balance result
     const isBalanceCorrect = isBalanced.value;
-    console.log(`Is balanced check result (before state update): ${isBalanceCorrect}`);
     
-    // Create a completely new state object to ensure reactivity
+    // Update state atomically
     const newAttempts = gameState.value.attempts + 1;
     const newSuccesses = isBalanceCorrect ? gameState.value.successes + 1 : gameState.value.successes;
     const newIsComplete = isBalanceCorrect ? true : gameState.value.isComplete;
+    const newLastAttemptCorrect = isBalanceCorrect;
     
     // Create a completely new state object to ensure reactivity
     gameState.value = {
       ...gameState.value,
       attempts: newAttempts,
       successes: newSuccesses,
-      lastAttemptCorrect: isBalanceCorrect,
+      lastAttemptCorrect: newLastAttemptCorrect,
       isComplete: newIsComplete
     };
     
-    // For debugging - log what was checked
-    console.log(`Balance check result: ${gameState.value.lastAttemptCorrect} (target: ${gameState.value.targetNumber})`);
-    console.log(`Updated state - attempts: ${gameState.value.attempts}, successes: ${gameState.value.successes}, isComplete: ${gameState.value.isComplete}`);
+    // Wait for the next tick to ensure Vue has processed the state change
+    await nextTick();
     
     // Handle successful balancing
     if (isBalanceCorrect) {
-      console.log('Balance is correct! Game state updated with new object.');
+      // Calculate success rate explicitly
+      const currentSuccessRate = (gameState.value.successes / gameState.value.attempts) * 100;
       
       // Check for level up conditions
-      if (successRate.value >= 80 && gameState.value.attempts >= 5) {
-        levelUp();
+      if (currentSuccessRate >= 80 && gameState.value.attempts >= 5) {
+        await levelUp();
       }
     }
     
     return isBalanceCorrect;
   }
 
-  function levelUp() {
-    gameState.value.currentLevel++;
+  async function levelUp() {
+    console.log(`Leveling up from level ${gameState.value.currentLevel}...`);
+    
+    // Increment the level
+    const newLevel = gameState.value.currentLevel + 1;
     
     // Adjust difficulty based on level
-    if (gameState.value.currentLevel % 3 === 0) {
+    let newMaxValue = config.value.maxValue;
+    let newTargetRangeMax = config.value.targetRange.max;
+    let newMaxAddends = config.value.maxAddends;
+    
+    if (newLevel % 3 === 0) {
       // Every third level, increase the maximum value
-      config.value.maxValue += 5;
+      newMaxValue += 5;
     }
     
-    if (gameState.value.currentLevel % 5 === 0) {
+    if (newLevel % 5 === 0) {
       // Every fifth level, increase the target range
-      config.value.targetRange.max += 10;
+      newTargetRangeMax += 10;
     }
     
-    if (gameState.value.currentLevel % 10 === 0 && config.value.maxAddends < 5) {
+    // Update config first
+    config.value = {
+      ...config.value,
+      maxValue: newMaxValue,
+      targetRange: {
+        ...config.value.targetRange,
+        max: newTargetRangeMax
+      }
+    };
+    
+    // Then update game state
+    const newAddends = [...gameState.value.addends];
+    
+    if (newLevel % 10 === 0 && newMaxAddends < 5) {
       // Every tenth level, add another addend (up to 5)
-      config.value.maxAddends++;
-      gameState.value.addends.push(0);
+      newMaxAddends++;
+      config.value.maxAddends = newMaxAddends;
+      newAddends.push(0);
     }
+    
+    // Update game state with new level and reset counters
+    gameState.value = {
+      ...gameState.value,
+      addends: newAddends,
+      currentLevel: newLevel,
+      attempts: 0,
+      successes: 0
+    };
+    
+    // Wait for the next tick to ensure Vue has processed the state change
+    await nextTick();
+    
+    // Return the new level
+    return newLevel;
   }
 
   function updateConfig(newConfig: Partial<GameConfig>) {
     config.value = { ...config.value, ...newConfig };
   }
 
-  function resetGame() {
+  async function resetGame() {
     // Generate a random target number
     const newTarget = generateTargetNumber();
     
-    console.log(`Store: Resetting game with new target number: ${newTarget}`);
-    
     // Create a completely new state object to ensure reactivity
     gameState.value = {
-      targetNumber: newTarget,
       addends: Array(config.value.maxAddends).fill(0),
       attempts: 0,
       successes: 0,
@@ -244,24 +274,17 @@ export const useGameStore = defineStore('game', () => {
       lastAttemptCorrect: null
     };
     
-    // Log state after reset
-    console.log('Store: Game state after reset:', {
-      targetNumber: gameState.value.targetNumber,
-      internalTarget: _internalTarget.value,
-      addends: gameState.value.addends,
-      sum: sum.value
-    });
-  }
-
-  function setTargetNumberDirectly(newTarget: number) {
-    console.log(`Explicitly setting target number to: ${newTarget}`);
-    _internalTarget.value = newTarget;
-    gameState.value.targetNumber = newTarget;
+    // Wait for the next tick to ensure synchronization
+    await nextTick();
+    
+    // Return the new target
+    return newTarget;
   }
 
   return {
     config,
     gameState,
+    targetNumber, // Expose the computed property, not the internal ref
     sum,
     isBalanced,
     difference,
@@ -272,7 +295,7 @@ export const useGameStore = defineStore('game', () => {
     levelUp,
     updateConfig,
     resetGame,
-    generateTargetNumber,
-    setTargetNumberDirectly
+    setTargetNumber, // Expose the explicit setter function
+    generateTargetNumber
   };
 }); 
