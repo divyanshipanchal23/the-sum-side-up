@@ -31,31 +31,31 @@
               <p class="text-gray-600">No progress data yet. Start playing to see your statistics!</p>
               <router-link 
                 to="/game" 
-                class="mt-4 inline-block px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700"
+                class="mt-4 inline-block px-4 py-2 bg-white text-black rounded border border-indigo-600 hover:bg-gray-100"
               >
-                Start a Game
+                Play More Games
               </router-link>
             </div>
             
             <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div class="bg-indigo-50 p-4 rounded-lg border border-indigo-100">
-                <p class="text-sm text-indigo-600 font-medium">Total Activities</p>
-                <p class="text-2xl font-bold">{{ activities.length }}</p>
+                <p class="text-sm font-medium text-gray-800">Total Activities</p>
+                <p class="text-2xl font-bold text-gray-900">{{ activities.length }}</p>
               </div>
               
               <div class="bg-green-50 p-4 rounded-lg border border-green-100">
-                <p class="text-sm text-green-600 font-medium">Success Rate</p>
-                <p class="text-2xl font-bold">{{ overallSuccessRate }}%</p>
+                <p class="text-sm font-medium text-gray-800">Success Rate</p>
+                <p class="text-2xl font-bold text-gray-900">{{ overallSuccessRate }}%</p>
               </div>
               
               <div class="bg-purple-50 p-4 rounded-lg border border-purple-100">
-                <p class="text-sm text-purple-600 font-medium">Total Attempts</p>
-                <p class="text-2xl font-bold">{{ totalAttempts }}</p>
+                <p class="text-sm font-medium text-gray-800">Total Attempts</p>
+                <p class="text-2xl font-bold text-gray-900">{{ totalAttempts }}</p>
               </div>
               
               <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                <p class="text-sm text-blue-600 font-medium">Last Played</p>
-                <p class="text-2xl font-bold">{{ lastPlayedFormatted }}</p>
+                <p class="text-sm font-medium text-gray-800">Last Played</p>
+                <p class="text-2xl font-bold text-gray-900">{{ lastPlayedFormatted }}</p>
               </div>
             </div>
           </div>
@@ -102,8 +102,8 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                       <div class="text-sm text-gray-900">{{ activity.successes }} / {{ activity.attempts }}</div>
-                      <div class="w-full bg-gray-200 rounded-full h-2.5 mt-1">
-                        <div class="bg-green-600 h-2.5 rounded-full" :style="{ width: `${(activity.successes / activity.attempts) * 100}%` }"></div>
+                      <div class="w-full bg-gray-200 rounded-full h-2.5 mb-4">
+                        <div class="bg-white border border-green-600 h-2.5 rounded-full" :style="{ width: `${(activity.successes / activity.attempts) * 100}%` }"></div>
                       </div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -112,16 +112,16 @@
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {{ formatDate(activity.lastPlayed) }}
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right">
+                    <td class="px-6 py-4 whitespace-nowrap text-right">
                       <button
                         @click="viewActivityDetails(activity)"
-                        class="text-indigo-600 hover:text-indigo-900 mr-3"
+                        class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200 mr-2 text-sm"
                       >
                         View Details
                       </button>
                       <router-link
                         :to="`/game?configId=${activity.activityId}`"
-                        class="text-green-600 hover:text-green-900"
+                        class="px-3 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200 text-sm"
                       >
                         Continue
                       </router-link>
@@ -147,72 +147,82 @@
                 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                   <div class="bg-indigo-50 p-4 rounded-lg">
-                    <p class="text-sm text-indigo-600 font-medium">Current Level</p>
-                    <p class="text-2xl font-bold">{{ selectedActivity.currentLevel }}</p>
+                    <p class="text-sm font-medium text-gray-800">Current Level</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ selectedActivity.currentLevel }}</p>
                   </div>
                   
                   <div class="bg-green-50 p-4 rounded-lg">
-                    <p class="text-sm text-green-600 font-medium">Success Rate</p>
-                    <p class="text-2xl font-bold">{{ (selectedActivity.successes / selectedActivity.attempts * 100).toFixed(1) }}%</p>
+                    <p class="text-sm font-medium text-gray-800">Success Rate</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ (selectedActivity.successes / selectedActivity.attempts * 100).toFixed(1) }}%</p>
                   </div>
                   
                   <div class="bg-purple-50 p-4 rounded-lg">
-                    <p class="text-sm text-purple-600 font-medium">Attempts</p>
-                    <p class="text-2xl font-bold">{{ selectedActivity.attempts }}</p>
+                    <p class="text-sm font-medium text-gray-800">Attempts</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ selectedActivity.attempts }}</p>
                   </div>
                 </div>
                 
                 <h4 class="font-medium text-gray-900 mb-2">Recent Attempts</h4>
                 
-                <div class="overflow-x-auto">
+                <div v-if="selectedActivity.history.length === 0" class="text-center py-4 bg-gray-50 rounded-lg">
+                  <p class="text-gray-600">No detailed history available.</p>
+                </div>
+                
+                <div v-else class="overflow-x-auto mb-4">
                   <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                       <tr>
-                        <th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Date
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Date & Time
                         </th>
-                        <th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Target
                         </th>
-                        <th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Inputs
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Input Values
                         </th>
-                        <th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Result
                         </th>
-                        <th scope="col" class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Time (s)
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Time (sec)
                         </th>
                       </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
-                      <tr v-for="(attempt, index) in selectedActivity.history" :key="index" class="hover:bg-gray-50">
-                        <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                      <tr v-for="attempt in selectedActivity.history" :key="attempt.id" class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {{ formatDateTime(attempt.timestamp) }}
                         </td>
-                        <td class="px-3 py-2 whitespace-nowrap">
-                          <div class="text-sm font-medium text-gray-900">{{ attempt.target }}</div>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {{ attempt.target }}
                         </td>
-                        <td class="px-3 py-2 whitespace-nowrap">
-                          <div class="text-sm text-gray-900">{{ attempt.inputs.join(' + ') }}</div>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {{ attempt.inputs.join(' + ') }}
                         </td>
-                        <td class="px-3 py-2 whitespace-nowrap">
-                          <span :class="attempt.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'" class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <span 
+                            :class="attempt.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'" 
+                            class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full"
+                          >
                             {{ attempt.success ? 'Correct' : 'Incorrect' }}
                           </span>
                         </td>
-                        <td class="px-3 py-2 whitespace-nowrap text-sm text-gray-900">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {{ attempt.timeSpent.toFixed(1) }}
-                        </td>
-                      </tr>
-                      
-                      <tr v-if="selectedActivity.history.length === 0">
-                        <td colspan="5" class="px-3 py-4 text-sm text-center text-gray-500">
-                          No attempt history available
                         </td>
                       </tr>
                     </tbody>
                   </table>
+                </div>
+                
+                <div class="flex justify-end">
+                  <button 
+                    @click="selectedActivity = null" 
+                    class="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200"
+                  >
+                    Close
+                  </button>
                 </div>
               </div>
             </div>
@@ -272,18 +282,62 @@ const lastPlayedFormatted = computed(() => {
 });
 
 // Utility functions
-function formatDate(date: Date): string {
+function formatDate(date: any): string {
   if (!date) return 'N/A';
   
-  const d = new Date(date);
-  return d.toLocaleDateString();
+  try {
+    // Handle different types of date inputs that might come from Firestore
+    let d: Date;
+    
+    // If it's a Firestore Timestamp object with seconds and nanoseconds
+    if (date && typeof date === 'object' && 'seconds' in date) {
+      d = new Date(date.seconds * 1000);
+    } 
+    // If it's a regular Date object or ISO string
+    else {
+      d = new Date(date);
+    }
+    
+    // Check if the date is valid
+    if (isNaN(d.getTime())) {
+      console.error('Invalid date format:', date);
+      return 'Invalid Date';
+    }
+    
+    return d.toLocaleDateString();
+  } catch (err) {
+    console.error('Error formatting date:', err, date);
+    return 'Invalid Date';
+  }
 }
 
-function formatDateTime(date: Date): string {
+function formatDateTime(date: any): string {
   if (!date) return 'N/A';
   
-  const d = new Date(date);
-  return `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+  try {
+    // Handle different types of date inputs that might come from Firestore
+    let d: Date;
+    
+    // If it's a Firestore Timestamp object with seconds and nanoseconds
+    if (date && typeof date === 'object' && 'seconds' in date) {
+      d = new Date(date.seconds * 1000);
+    } 
+    // If it's a regular Date object or ISO string
+    else {
+      d = new Date(date);
+    }
+    
+    // Check if the date is valid
+    if (isNaN(d.getTime())) {
+      console.error('Invalid date format:', date);
+      return 'Invalid Date';
+    }
+    
+    return `${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+  } catch (err) {
+    console.error('Error formatting date:', err, date);
+    return 'Invalid Date';
+  }
 }
 
 // View activity details

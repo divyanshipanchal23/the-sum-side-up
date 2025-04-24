@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Firebase Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      padding: 20px;
+    }
+    .status {
+      margin-top: 20px;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    .success {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    .error {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+    #log {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #f8f9fa;
+      border-radius: 5px;
+      height: 200px;
+      overflow: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Firebase Configuration Test</h1>
+  <div id="status" class="status">Testing Firebase initialization...</div>
+  <div id="log"></div>
+
+  <!-- Import Firebase directly -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <script>
+    // Log function
+    function log(message) {
+      const logElement = document.getElementById('log');
+      logElement.innerHTML += `<div>${message}</div>`;
+      console.log(message);
+    }
+
+    // Set status
+    function setStatus(message, isSuccess) {
+      const statusElement = document.getElementById('status');
+      statusElement.textContent = message;
+      statusElement.className = isSuccess ? 'status success' : 'status error';
+    }
+
+    try {
+      // Firebase configuration from your project
+      const firebaseConfig = {
+        apiKey: "AIzaSyCrvg64RA9lg2YPA335k-FaqFMWeLttbTc",
+        authDomain: "balance-scale-game-39d7f.firebaseapp.com",
+        projectId: "balance-scale-game-39d7f",
+        storageBucket: "balance-scale-game-39d7f.appspot.com",
+        messagingSenderId: "538582939930",
+        appId: "1:538582939930:web:21b845e39a186da93114a3"
+      };
+
+      log('Starting Firebase initialization...');
+      
+      // Initialize Firebase
+      firebase.initializeApp(firebaseConfig);
+      log('Firebase app initialized successfully');
+      
+      // Initialize auth
+      const auth = firebase.auth();
+      log('Firebase Auth initialized successfully');
+      
+      // Initialize Firestore
+      const firestore = firebase.firestore();
+      log('Firestore initialized successfully');
+      
+      setStatus('Firebase initialized successfully!', true);
+    } catch (error) {
+      log(`Error: ${error.message}`);
+      setStatus(`Firebase initialization failed: ${error.message}`, false);
+    }
+  </script>
+</body>
+</html> 

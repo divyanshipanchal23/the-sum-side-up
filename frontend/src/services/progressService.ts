@@ -166,9 +166,15 @@ class ProgressService {
       // Transform data
       const progress = progressSnap.data() as UserProgress;
       
-      // Convert timestamp
+      // Convert timestamp - properly handle Firestore timestamp
       if (progress.lastPlayed) {
-        progress.lastPlayed = new Date(progress.lastPlayed);
+        // If it's a Firestore Timestamp with seconds
+        if (typeof progress.lastPlayed === 'object' && 'seconds' in progress.lastPlayed) {
+          progress.lastPlayed = new Date(progress.lastPlayed.seconds * 1000);
+        } else {
+          // Attempt to convert from other formats
+          progress.lastPlayed = new Date(progress.lastPlayed);
+        }
       }
       
       // Fetch recent history items (limited to last 10 for performance)
@@ -186,14 +192,25 @@ class ProgressService {
           const data = doc.data() as GameAttempt;
           data.id = doc.id;
           
-          // Convert timestamp
+          // Convert timestamp - handle Firestore timestamp
           if (data.timestamp) {
-            data.timestamp = new Date(data.timestamp);
+            // If it's a Firestore Timestamp with seconds
+            if (typeof data.timestamp === 'object' && 'seconds' in data.timestamp) {
+              data.timestamp = new Date(data.timestamp.seconds * 1000);
+            } else {
+              // Attempt to convert from other formats
+              data.timestamp = new Date(data.timestamp);
+            }
           }
           
           return data;
         })
-        .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
+        .sort((a, b) => {
+          // Safely handle potential invalid dates
+          const timeA = a.timestamp instanceof Date ? a.timestamp.getTime() : 0;
+          const timeB = b.timestamp instanceof Date ? b.timestamp.getTime() : 0;
+          return timeB - timeA;
+        })
         .slice(0, 10);
       
       // Attach recent history
@@ -232,9 +249,18 @@ class ProgressService {
       return progressSnapshot.docs.map(doc => {
         const data = doc.data() as UserProgress;
         
-        // Convert timestamp
+        // Convert timestamp - properly handle Firestore timestamp
         if (data.lastPlayed) {
-          data.lastPlayed = new Date(data.lastPlayed);
+          // If it's a Firestore Timestamp with seconds
+          if (typeof data.lastPlayed === 'object' && 'seconds' in data.lastPlayed) {
+            data.lastPlayed = new Date(data.lastPlayed.seconds * 1000);
+          } else {
+            // Attempt to convert from other formats
+            data.lastPlayed = new Date(data.lastPlayed);
+          }
+          
+          // Log the lastPlayed value for debugging
+          console.log(`Progress lastPlayed for ${data.activityId}:`, data.lastPlayed);
         }
         
         // We don't fetch history here for performance reasons

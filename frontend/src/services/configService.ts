@@ -166,8 +166,31 @@ class ConfigService {
       
       // Also try to save to the backend API if available
       try {
+        // Transform the config to match the backend API schema
+        const apiConfig = {
+          id: config.id,
+          title: config.title,
+          description: config.title, // Use title as description since it's required in the backend
+          difficulty: config.difficulty,
+          target_range: {
+            min: config.targetRange.min,
+            max: config.targetRange.max
+          },
+          number_of_addends: config.numberOfAddends,
+          time_limit: config.timeLimit || null,
+          hints_enabled: config.hintsEnabled,
+          progression_rules: {
+            required_success_rate: config.progressionRules.requiredSuccessRate,
+            advancement_threshold: config.progressionRules.advancementThreshold
+          },
+          is_public: config.isPublic,
+          created_by: config.createdBy,
+          created_at: config.created_at,
+          updated_at: config.updated_at
+        };
+        
         // We'll make a best-effort to save to the backend API, but won't fail if it doesn't work
-        await apiService.post('/api/game/configurations', config);
+        await apiService.post('/api/game/configurations', apiConfig);
       } catch (apiError) {
         console.warn('Could not save to backend API, but Firestore save succeeded', apiError);
       }

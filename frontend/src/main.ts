@@ -27,11 +27,13 @@ const app = createApp(App)
 app.use(pinia)
 app.use(router)
 
-// Initialize auth and wait for it before mounting the app
-const authStore = useAuthStore()
+// Mount the app immediately
+app.mount('#app')
 
-// Initialize the auth state
+// Initialize auth state in the background
+const authStore = useAuthStore()
 authStore.init().then(() => {
-  // Mount the app once auth is initialized
-  app.mount('#app')
+  console.log('Auth initialized')
+}).catch(error => {
+  console.error('Error initializing auth:', error)
 })

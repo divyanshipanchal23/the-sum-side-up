@@ -8,7 +8,7 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   sendPasswordResetEmail,
-  User
+  type User
 } from 'firebase/auth';
 import { auth } from '../services/firebase';
 
@@ -25,12 +25,25 @@ export const useAuthStore = defineStore('auth', () => {
   
   // Initialize auth state listener
   function init() {
-    return new Promise<void>((resolve) => {
-      // Set up auth state listener
-      onAuthStateChanged(auth, (firebaseUser) => {
-        user.value = firebaseUser;
-        resolve();
-      });
+    return new Promise<void>((resolve, reject) => {
+      try {
+        console.log('Setting up auth state listener...');
+        // Set up auth state listener
+        onAuthStateChanged(auth, 
+          (firebaseUser) => {
+            console.log('Auth state changed:', firebaseUser ? 'User logged in' : 'No user');
+            user.value = firebaseUser;
+            resolve();
+          },
+          (error) => {
+            console.error('Auth state change error:', error);
+            reject(error);
+          }
+        );
+      } catch (err) {
+        console.error('Error initializing auth:', err);
+        reject(err);
+      }
     });
   }
   

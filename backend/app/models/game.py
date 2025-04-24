@@ -30,20 +30,34 @@ class GameConfiguration(BaseModel):
     is_public: bool = False
 
 class GameAttempt(BaseModel):
+    userId: str  # Required field from frontend
+    activityId: str  # Required field from frontend
     timestamp: datetime = Field(default_factory=datetime.now)
     target: int
     inputs: List[int]
     success: bool
-    time_spent: float  # in seconds
+    timeSpent: float  # in seconds
+    
+    # Optional backend fields to maintain compatibility
+    user_id: Optional[str] = None
+    activity_id: Optional[str] = None
+    time_spent: Optional[float] = None
 
 class UserProgress(BaseModel):
-    user_id: str
-    activity_id: str
+    # Frontend field naming (camelCase)
+    userId: str
+    activityId: str
     attempts: int = 0
     successes: int = 0
-    current_level: int = 1
-    last_played: datetime = Field(default_factory=datetime.now)
+    currentLevel: int = 1
+    lastPlayed: Optional[datetime] = Field(default_factory=datetime.now)
     history: List[GameAttempt] = []
+    
+    # Backend field naming (snake_case) for compatibility
+    user_id: Optional[str] = None
+    activity_id: Optional[str] = None
+    current_level: Optional[int] = None
+    last_played: Optional[datetime] = None
 
 class GameSession(BaseModel):
     id: str

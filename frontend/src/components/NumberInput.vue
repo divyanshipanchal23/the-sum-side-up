@@ -13,7 +13,7 @@
         v-if="showNumberButtons" 
         @click="decrementValue"
         :disabled="isAtMin"
-        class="decrement-btn rounded-l-md p-2 border border-gray-300 bg-gray-50 text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        class="decrement-btn rounded-l-md p-2 border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
         :class="{ 'opacity-50 cursor-not-allowed': isAtMin }"
         aria-label="Decrease value"
       >
@@ -29,7 +29,7 @@
         :min="min"
         :max="max"
         :step="step"
-        class="block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+        class="block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-white text-black"
         :class="{ 'rounded-l-none rounded-r-none': showNumberButtons, 'rounded-md': !showNumberButtons }"
         @input="handleInput"
         @keydown.up.prevent="incrementValue"
@@ -45,7 +45,7 @@
         v-if="showNumberButtons" 
         @click="incrementValue"
         :disabled="isAtMax"
-        class="increment-btn rounded-r-md p-2 border border-gray-300 bg-gray-50 text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        class="increment-btn rounded-r-md p-2 border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
         :class="{ 'opacity-50 cursor-not-allowed': isAtMax }"
         aria-label="Increase value"
       >

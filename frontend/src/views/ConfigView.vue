@@ -5,7 +5,7 @@
       
       <div class="bg-white rounded-lg shadow-lg p-6">
         <!-- Configuration Form -->
-        <form @submit.prevent="saveConfiguration" class="space-y-8">
+        <form @submit="saveConfiguration" class="space-y-8">
           <!-- Configuration Name -->
           <div>
             <h2 class="text-xl font-semibold text-gray-800 mb-4 border-b pb-2">Basic Information</h2>
@@ -266,6 +266,20 @@
             </div>
           </div>
           
+          <!-- Unsaved changes indicator -->
+          <div v-if="formDirty && !successMessage && !error" class="bg-blue-50 border-l-4 border-blue-400 p-4">
+            <div class="flex">
+              <div class="flex-shrink-0">
+                <svg class="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9a1 1 0 00-1-1z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              <div class="ml-3">
+                <p class="text-sm text-blue-700">You have unsaved changes. Click "Save Configuration" to save your changes.</p>
+              </div>
+            </div>
+          </div>
+          
           <!-- Success message -->
           <div v-if="successMessage" class="bg-green-50 border-l-4 border-green-400 p-4">
             <div class="flex">
@@ -280,29 +294,31 @@
             </div>
           </div>
           
-          <!-- Form actions -->
-          <div class="flex justify-between items-center pt-4 border-t border-gray-200">
-            <router-link to="/" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition duration-150">
+          <!-- Buttons Section -->
+          <div class="flex flex-wrap gap-4 mt-8">
+            <button 
+              type="submit" 
+              class="px-6 py-3 bg-white text-black font-medium rounded-lg border border-indigo-600 hover:bg-gray-100 transition duration-300"
+              :disabled="isLoading"
+            >
+              {{ isLoading ? 'Saving...' : 'Save Configuration' }}
+            </button>
+            
+            <button 
+              type="button" 
+              @click="resetForm" 
+              class="px-6 py-3 bg-white text-black font-medium rounded-lg border border-gray-300 hover:bg-gray-100 transition duration-300"
+              :disabled="isLoading"
+            >
+              Reset Form
+            </button>
+            
+            <router-link 
+              to="/" 
+              class="px-6 py-3 bg-white text-black font-medium rounded-lg border border-gray-300 hover:bg-gray-100 transition duration-300 inline-flex items-center"
+            >
               Back to Home
             </router-link>
-            
-            <div class="space-x-3">
-              <button 
-                type="button"
-                @click="resetForm"
-                class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition duration-150"
-              >
-                Reset
-              </button>
-              <button 
-                type="submit"
-                class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition duration-150"
-                :disabled="isLoading"
-              >
-                <span v-if="isLoading">Saving...</span>
-                <span v-else>Save Configuration</span>
-              </button>
-            </div>
           </div>
         </form>
       </div>
@@ -311,13 +327,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import NumberInput from '../components/NumberInput.vue';
 import { useAuthStore } from '../stores/authStore';
 import soundService from '../services/soundService';
 import { v4 as uuidv4 } from 'uuid';
 import configService, { GameConfig } from '../services/configService';
+import { isEqual } from 'lodash';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -327,6 +344,19 @@ const formSubmitted = ref(false);
 const error = ref<string | null>(null);
 const successMessage = ref<string | null>(null);
 const isLoading = ref(false);
+const formDirty = ref(false);  // Track if the form has unsaved changes
+const lastSavedState = ref<string>('');  // Track the last saved state as JSON for comparison
+
+// Helper function to perform deep clone of objects
+function deepClone<T>(obj: T): T {
+  return JSON.parse(JSON.stringify(obj));
+}
+
+// Helper function to check if form is different from last saved state
+function isFormChanged(): boolean {
+  // Use lodash's isEqual for more robust comparison that handles deep structures, order, etc.
+  return !isEqual(configForm.value, JSON.parse(lastSavedState.value || '{}'));
+}
 
 // Default configuration form values
 const defaultConfig = {
@@ -350,8 +380,8 @@ const defaultConfig = {
   createdBy: ''
 };
 
-// Create reactive form with default values
-const configForm = ref({ ...defaultConfig });
+// Create reactive form with default values (using deep clone)
+const configForm = ref(deepClone(defaultConfig));
 
 // Generate a preview target number based on the configuration
 const previewTarget = computed(() => {
@@ -360,7 +390,49 @@ const previewTarget = computed(() => {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 });
 
-// Validate number ranges when changing values
+// Watch for form changes with specific action handling and debounce
+let watchTimeout: number | null = null;
+let initializing = true; // Flag to prevent watch reactions during initial form setup (reset to false at end of onMounted)
+
+// Watch the entire ref and use deep tracking properly
+watch(
+  configForm,
+  () => {
+    // Skip changes during initialization
+    if (initializing) {
+      return;
+    }
+    
+    console.log("Form change detected"); // Debug confirmation
+    
+    // Clear any pending timeout to debounce rapid changes
+    if (watchTimeout !== null) {
+      clearTimeout(watchTimeout);
+    }
+    
+    // Immediately clear success message on ANY change
+    if (successMessage.value) {
+      successMessage.value = null;
+    }
+    
+    // Debounce to avoid multiple triggers for related field changes
+    watchTimeout = window.setTimeout(() => {
+      // Check if the form has actually changed from last saved state
+      if (isFormChanged()) {
+        // Mark form as dirty (has unsaved changes)
+        formDirty.value = true;
+      } else {
+        // If form matches the saved state, mark as not dirty
+        formDirty.value = false;
+      }
+      
+      watchTimeout = null;
+    }, 150); // Increased timeout to better group related changes
+  },
+  { deep: true, immediate: false }
+);
+
+// Validate number ranges when changing values (without triggering save)
 function validateRanges() {
   // Ensure the maximum input value is reasonable based on the number of addends
   configForm.value.maxValue = Math.min(configForm.value.maxValue, 100);
@@ -384,25 +456,51 @@ function validateRanges() {
 
 // Reset form to default values
 function resetForm() {
-  configForm.value = { ...defaultConfig };
+  // Create a fresh copy of the default config
+  const freshConfig = deepClone(defaultConfig);
+  
+  // Generate a new ID
+  freshConfig.id = uuidv4();
+  
+  // Set a default title with timestamp
+  const dateStr = new Date().toLocaleDateString();
+  freshConfig.title = `Balance Scale Config (${dateStr})`;
+  
+  // Set the form to the fresh config
+  configForm.value = freshConfig;
+  
+  // Reset form state
   formSubmitted.value = false;
   error.value = null;
   successMessage.value = null;
   
-  // Regenerate ID and set default title
-  configForm.value.id = uuidv4();
-  const dateStr = new Date().toLocaleDateString();
-  configForm.value.title = `Balance Scale Config (${dateStr})`;
+  // Update the last saved state and mark form as not dirty
+  lastSavedState.value = JSON.stringify(freshConfig);
+  formDirty.value = false;
   
   // Play sound effect
   soundService.play('click');
 }
 
-// Save configuration to Firestore
-async function saveConfiguration() {
+// Save configuration to Firestore (only when explicitly called by the submit button)
+async function saveConfiguration(event: Event) {
+  // Explicitly prevent default form submission behavior
+  event.preventDefault();
+  
+  // Prevent duplicate submissions
+  if (isLoading.value) {
+    return;
+  }
+  
+  // No need to save if nothing has changed
+  if (!formDirty.value && lastSavedState.value !== '') {
+    console.log('No changes to save');
+    return;
+  }
+  
   formSubmitted.value = true;
   error.value = null;
-  successMessage.value = null;
+  successMessage.value = null; // Clear any existing success message
   
   // Validate form
   if (!configForm.value.title.trim()) {
@@ -412,6 +510,7 @@ async function saveConfiguration() {
   }
   
   isLoading.value = true;
+  let apiErrorOccurred = false;
   
   try {
     // Generate a new ID if not editing an existing configuration
@@ -422,28 +521,73 @@ async function saveConfiguration() {
     // Set creator ID
     configForm.value.createdBy = authStore.userId;
     
-    // Save configuration using our service
-    await configService.saveConfiguration(configForm.value as GameConfig);
+    // Create a copy to save (to avoid reactive changes during save)
+    const configToSave = deepClone(configForm.value) as GameConfig;
     
-    // Show success message
-    successMessage.value = 'Configuration saved successfully!';
+    // Save configuration using our service
+    await configService.saveConfiguration(configToSave);
+    
+    // Update the last saved state with the current form state
+    lastSavedState.value = JSON.stringify(configForm.value);
+    
+    // Explicitly clear any existing success message before setting new one
+    successMessage.value = null;
+    
+    // Show success message with configuration ID
+    successMessage.value = `Configuration saved successfully! ID: ${configForm.value.id} Copy This ID to share with others!`;
+    
+    // Auto-hide success message after 4 seconds for better UX
+    setTimeout(() => {
+      // Only clear if it's the same message (in case of multiple saves)
+      if (successMessage.value && successMessage.value.includes(configForm.value.id)) {
+        successMessage.value = null;
+      }
+    }, 4000);
     
     // Play success sound
     soundService.play('correct');
     
-    // Reset submitted state after a successful save
+    // Reset form state after successful save
     formSubmitted.value = false;
+    formDirty.value = false;
   } catch (err: any) {
     console.error('Error saving configuration:', err);
-    error.value = `Failed to save configuration: ${err.message}`;
-    soundService.play('incorrect');
+    
+    // Check if the error message indicates API error but Firestore success
+    if (err.message && err.message.includes('API Error') && 
+        !err.message.includes('Failed to save configuration')) {
+      apiErrorOccurred = true;
+      
+      // Update the last saved state even with API error (Firestore succeeded)
+      lastSavedState.value = JSON.stringify(configForm.value);
+      
+      // Explicitly clear any existing success message before setting new one
+      successMessage.value = null;
+      
+      // Show partial success message
+      successMessage.value = `Configuration saved to your account! ID: ${configForm.value.id} (Note: Could not sync to online database)`;
+      
+      // Auto-hide this message too
+      setTimeout(() => {
+        if (successMessage.value && successMessage.value.includes(configForm.value.id)) {
+          successMessage.value = null;
+        }
+      }, 4000);
+      
+      soundService.play('correct');
+      formDirty.value = false;  // Mark as saved even with API error
+    } else {
+      // Full error
+      error.value = `Failed to save configuration: ${err.message}`;
+      soundService.play('incorrect');
+    }
   } finally {
     isLoading.value = false;
   }
 }
 
 // Initialize component
-onMounted(() => {
+onMounted(async () => {
   // Set the creator ID on mount
   configForm.value.createdBy = authStore.userId;
   
@@ -453,5 +597,17 @@ onMounted(() => {
   // Set a default title with timestamp
   const dateStr = new Date().toLocaleDateString();
   configForm.value.title = `Balance Scale Config (${dateStr})`;
+  
+  // Allow the component to fully mount before setting initial state
+  await nextTick();
+  
+  // Set initial saved state
+  lastSavedState.value = JSON.stringify(configForm.value);
+  
+  // Initially, the form is not dirty since nothing has been changed yet
+  formDirty.value = false;
+  
+  // Mark initialization as complete
+  initializing = false;
 });
 </script> 

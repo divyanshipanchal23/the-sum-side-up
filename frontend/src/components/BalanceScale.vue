@@ -39,22 +39,22 @@
     
     <!-- Display the values numerically for clarity -->
     <div class="scale-values flex justify-between w-full px-8 mt-2">
-      <div class="left-value text-blue-600 font-semibold">
+      <div class="left-value text-primary font-semibold">
         Left: {{ leftValue }}
       </div>
-      <div class="right-value text-indigo-600 font-semibold">
+      <div class="right-value text-accent-purple font-semibold">
         Right: {{ rightValue }}
       </div>
     </div>
     
     <div class="scale-feedback" v-if="showFeedback" aria-live="assertive">
-      <div v-if="tilt > 0" class="text-red-500">
+      <div v-if="tilt > 0" class="text-accent-red">
         Right side is heavier
       </div>
-      <div v-else-if="tilt < 0" class="text-red-500">
+      <div v-else-if="tilt < 0" class="text-accent-red">
         Left side is heavier
       </div>
-      <div v-else class="text-green-500">
+      <div v-else class="text-secondary">
         The scale is balanced!
       </div>
     </div>
@@ -199,54 +199,56 @@ const getBalanceDescription = computed(() => {
 /* Base of the stand */
 .scale-stand-base {
   position: absolute;
-  bottom: 0;
   left: 50%;
+  bottom: 0;
   transform: translateX(-50%);
-  width: 60px;
-  height: 15px;
-  background-color: #4b5563;
-  border-radius: 4px;
+  width: 100px;
+  height: 20px;
+  background-color: #FFD166; /* Sunshine Yellow */
+  border-radius: 6px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* Vertical stand */
 .scale-stand {
   position: absolute;
-  bottom: 15px; /* Sits on top of the base */
   left: 50%;
+  bottom: 20px;
   transform: translateX(-50%);
-  width: 14px;
-  height: 150px;
-  background-color: #6b7280;
-  border-radius: 4px;
+  width: 20px;
+  height: 180px;
+  background-color: #4A90E2; /* Primary Blue */
+  border-radius: 6px 6px 0 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Fulcrum at the top of the stand */
+/* Fulcrum (the peak part where the beam balances) */
 .scale-fulcrum {
   position: absolute;
-  bottom: 165px; /* Stand height + base height */
   left: 50%;
+  bottom: 200px;
   transform: translateX(-50%);
-  width: 30px;
+  width: 40px;
   height: 15px;
-  background-color: #4b5563;
-  border-radius: 50% 50% 0 0;
+  background-color: #BDADEA; /* Light Lavender */
+  border-radius: 6px;
   z-index: 5;
 }
 
-/* Horizontal beam */
+/* Beam that tilts */
 .scale-beam {
   position: absolute;
-  bottom: 180px; /* Adjusted to sit properly on the fulcrum */
   left: 50%;
-  transform-origin: center center; /* Rotate from exact center */
-  width: 70%;
+  bottom: 210px;
+  width: 80%;
   height: 8px;
-  background-color: #4b5563;
+  background-color: #4A90E2; /* Primary Blue */
   border-radius: 4px;
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); /* Bouncy, more noticeable animation */
+  transform-origin: center center;
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: 4;
 }
 
-/* Center pivot point */
 .pivot-point {
   position: absolute;
   left: 50%;
@@ -254,9 +256,9 @@ const getBalanceDescription = computed(() => {
   transform: translate(-50%, -50%);
   width: 14px;
   height: 14px;
-  background-color: #9ca3af;
+  background-color: #BDADEA; /* Light Lavender */
   border-radius: 50%;
-  border: 2px solid #6b7280;
+  border: 2px solid #4A90E2; /* Primary Blue */
   z-index: 10;
 }
 
@@ -265,7 +267,7 @@ const getBalanceDescription = computed(() => {
   position: absolute;
   width: 2px;
   height: 60px;
-  background-color: #9ca3af;
+  background-color: #BDADEA; /* Light Lavender */
   top: 4px; /* Start from beam */
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); /* Match beam animation */
 }
@@ -283,7 +285,6 @@ const getBalanceDescription = computed(() => {
   position: absolute;
   width: 80px;
   height: 80px;
-  background-color: #6366f1;
   border-radius: 50%;
   display: flex;
   justify-content: center;
@@ -299,11 +300,15 @@ const getBalanceDescription = computed(() => {
 .left-pan {
   left: 20%;
   transform: translateX(-50%);
+  background-color: #4A90E2; /* Primary Blue */
+  border: 3px solid #BDADEA; /* Light Lavender */
 }
 
 .right-pan {
   right: 20%;
   transform: translateX(50%);
+  background-color: #BDADEA; /* Light Lavender */
+  border: 3px solid #4A90E2; /* Primary Blue */
 }
 
 .scale-pan-content {
@@ -339,17 +344,11 @@ const getBalanceDescription = computed(() => {
   border-width: 0;
 }
 
-.scale-info {
-  display: flex;
-  justify-content: space-around;
-  margin-bottom: 10px;
-  font-size: 0.8rem;
-  color: #777;
-}
-
-.scale-value {
-  background-color: #f0f0f0;
-  padding: 2px 6px;
-  border-radius: 4px;
+.scale-values {
+  background-color: #F0EBFF; /* Secondary Background */
+  padding: 8px 16px;
+  border-radius: 10px;
+  margin-top: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 </style> 

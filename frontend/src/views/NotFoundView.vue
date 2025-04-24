@@ -8,9 +8,9 @@
       </p>
       <router-link 
         to="/" 
-        class="inline-block px-6 py-3 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition duration-300"
+        class="inline-block px-6 py-3 bg-white text-black font-medium rounded-lg border border-indigo-600 hover:bg-gray-100 transition duration-300"
       >
-        Go Back Home
+        Return to Home
       </router-link>
     </div>
   </div>

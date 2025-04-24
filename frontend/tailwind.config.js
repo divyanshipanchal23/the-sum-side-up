@@ -11,7 +11,21 @@ export default {
     resolve(__dirname, './src/**/*.{vue,js,ts,jsx,tsx}'),
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        primary: '#4A90E2',
+        secondary: '#06D6A0',
+        accent: {
+          yellow: '#FFD166',
+          red: '#EF476F',
+          purple: '#BDADEA',
+        },
+        background: {
+          soft: '#F9F7FF',
+          secondary: '#F0EBFF',
+        }
+      }
+    },
   },
   plugins: [],
 } 
