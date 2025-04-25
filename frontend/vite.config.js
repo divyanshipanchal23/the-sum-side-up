@@ -14,16 +14,9 @@ export default defineConfig({
     assetsDir: 'assets',
     
     // Disable minification for troubleshooting
-    minify: false,
-    
-    // Add rollup options to handle lodash
-    rollupOptions: {
-      external: ['lodash'],
-      output: {
-        globals: {
-          lodash: '_'
-        }
-      }
-    }
+    minify: false
+  },
+  optimizeDeps: {
+    include: ['lodash']
   }
 }) 
