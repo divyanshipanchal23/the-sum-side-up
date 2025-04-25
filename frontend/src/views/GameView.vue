@@ -1178,9 +1178,8 @@ function getRandomIncorrectMessage(actual: number, target: number) {
   position: fixed;
   bottom: 20px;
   right: 20px;
-  z-index: 999; /* Ensure highest z-index to always be visible */
+  z-index: 60; /* Increase z-index to be above other elements but below the star overlay */
   transition: all 0.3s ease;
-  pointer-events: auto; /* Ensure touch events work */
 }
 
 /* When mascot has a message, make it more prominent */
@@ -1191,11 +1190,10 @@ function getRandomIncorrectMessage(actual: number, target: number) {
 
 @media (max-width: 768px) {
   .feedback-mascot-container {
-    bottom: 70px; /* Increased from 10px to avoid overlap with UI elements */
+    bottom: 10px;
     right: 10px;
-    transform: scale(0.8); 
+    transform: scale(0.8);
     transform-origin: bottom right;
-    z-index: 999; /* Ensure highest z-index even on mobile */
   }
   
   /* Adjust scale for mobile when message is showing */
