@@ -112,6 +112,18 @@
             >
               {{ useEnhancedScale ? 'Using Enhanced Scale' : 'Using Basic Scale' }}
             </v-btn>
+            
+            <!-- Add toggle for number input style -->
+            <v-btn
+              variant="outlined"
+              color="primary"
+              @click="toggleEnhancedInput"
+              size="small"
+              class="ml-2"
+              :prepend-icon="useEnhancedInput ? 'mdi-toggle-switch' : 'mdi-toggle-switch-off'"
+            >
+              {{ useEnhancedInput ? 'Using Enhanced Input' : 'Using Basic Input' }}
+            </v-btn>
           </div>
           
           <!-- Balance Scale Component -->
@@ -145,7 +157,8 @@
           
           <!-- Number Input Section -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div class="left-side p-4 rounded-lg bg-background-secondary">
+            <!-- Original Number Input -->
+            <div v-if="!useEnhancedInput" class="left-side p-4 rounded-lg bg-background-secondary">
               <h3 class="text-lg font-semibold text-gray-800 mb-3">Your Numbers:</h3>
               <div class="space-y-4">
                 <div v-for="(addend, index) in gameState.addends" :key="index" class="flex items-center">
@@ -167,6 +180,19 @@
                   </span>
                 </div>
               </div>
+            </div>
+            
+            <!-- Enhanced Number Input -->
+            <div v-else class="left-side">
+              <EnhancedNumberInput
+                :initialNumbers="gameState.addends"
+                :minValue="config.minValue"
+                :maxValue="config.maxValue"
+                :maxNumbers="config.maxAddends"
+                :targetValue="targetNumber"
+                @update:numbers="updateAddends"
+                @check-answer="checkAnswer"
+              />
             </div>
             
             <div class="right-side p-4 rounded-lg bg-background-secondary">
@@ -271,6 +297,7 @@ import { ref, computed, onMounted, watch, nextTick, onUnmounted } from 'vue';
 import BalanceScale from '../components/BalanceScale.vue';
 import EnhancedBalanceScale from '../components/EnhancedBalanceScale.vue';
 import NumberInput from '../components/NumberInput.vue';
+import EnhancedNumberInput from '../components/EnhancedNumberInput.vue';
 import BalancerBuddy from '../components/BalancerBuddy.vue';
 import StarReward from '../components/StarReward.vue';
 import { useGameStore } from '../stores/gameStore';
@@ -348,6 +375,9 @@ const starRewardTitle = ref('Great job!');
 
 // Add a new variable to control which scale to use
 const useEnhancedScale = ref(false);
+
+// Add a new variable to control which input style to use
+const useEnhancedInput = ref(false);
 
 // Refs for the balance scale components
 const balanceScaleRef = ref<InstanceType<typeof BalanceScale> | null>(null);
@@ -816,6 +846,36 @@ function toggleEnhancedScale() {
     enhancedBalanceScaleRef.value.resetScale();
   }
   playSound('click');
+}
+
+// Add function to toggle the enhanced input
+function toggleEnhancedInput() {
+  useEnhancedInput.value = !useEnhancedInput.value;
+  playSound('click');
+}
+
+// Add a function to update all addends at once (for EnhancedNumberInput)
+function updateAddends(newAddends: number[]) {
+  // Make sure we don't exceed the maximum number of addends
+  if (newAddends.length <= config.value.maxAddends) {
+    // Update each addend
+    newAddends.forEach((value, index) => {
+      if (index < gameState.value.addends.length) {
+        gameStore.setAddend(index, value);
+      }
+    });
+    
+    // If the array sizes are different, resize the gameState.addends array
+    if (newAddends.length > gameState.value.addends.length) {
+      // Add new addends
+      for (let i = gameState.value.addends.length; i < newAddends.length; i++) {
+        gameStore.setAddend(i, newAddends[i]);
+      }
+    } else if (newAddends.length < gameState.value.addends.length) {
+      // Remove excess addends by setting a new array
+      gameState.value.addends = [...newAddends];
+    }
+  }
 }
 </script>
 

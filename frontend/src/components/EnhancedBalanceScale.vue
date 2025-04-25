@@ -13,8 +13,12 @@
       :class="{ 'balanced': isBalanced, 'left-heavy': leftWeight > rightWeight, 'right-heavy': rightWeight > leftWeight }"
       :style="beamStyle"
     >
+      <!-- Beam connection points for better visualization -->
+      <div class="connection-point left-connection"></div>
+      <div class="connection-point right-connection"></div>
+      
       <!-- Left pan with 3D effect -->
-      <div class="pan-container left">
+      <div class="pan-container left" :style="leftPanStyle">
         <div class="pan-string"></div>
         <div class="pan" :class="{ 'weighted': leftWeight > 0 }">
           <div class="pan-inner">
@@ -36,7 +40,7 @@
       </div>
       
       <!-- Right pan with 3D effect -->
-      <div class="pan-container right">
+      <div class="pan-container right" :style="rightPanStyle">
         <div class="pan-string"></div>
         <div class="pan" :class="{ 'weighted': rightWeight > 0 }">
           <div class="pan-inner">
@@ -131,7 +135,8 @@ const beamAngle = computed(() => {
   // Scale the angle based on the relative weight difference
   const weightSum = Math.max(1, leftWeight.value + rightWeight.value);
   const scaledDiff = (diff / weightSum) * maxAngle;
-  const angle = Math.max(-maxAngle, Math.min(maxAngle, scaledDiff * 2));
+  // Add negative multiplier to make it tilt down on the heavier side
+  const angle = -1 * Math.max(-maxAngle, Math.min(maxAngle, scaledDiff * 2));
   
   return angle;
 });
@@ -139,6 +144,17 @@ const beamAngle = computed(() => {
 // Create the CSS style for the beam
 const beamStyle = computed(() => ({
   transform: `rotate(${beamAngle.value}deg)`,
+  transition: 'transform 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55)'
+}));
+
+// Add computed styles for pans to ensure they follow the beam properly
+const leftPanStyle = computed(() => ({
+  transform: `rotate(${-beamAngle.value}deg)`, // Counter-rotate to stay vertical
+  transition: 'transform 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55)'
+}));
+
+const rightPanStyle = computed(() => ({
+  transform: `rotate(${-beamAngle.value}deg)`, // Counter-rotate to stay vertical
   transition: 'transform 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55)'
 }));
 
@@ -225,7 +241,7 @@ onMounted(() => {
 
 .stand {
   width: 20px;
-  height: 120px;
+  height: 180px; /* Increased from 120px to make it taller */
   background: linear-gradient(90deg, #7A5DC7 0%, #9370DB 50%, #7A5DC7 100%);
   border-radius: 5px;
   box-shadow: -3px 0 6px rgba(0, 0, 0, 0.1), 3px 0 6px rgba(0, 0, 0, 0.1);
@@ -239,74 +255,89 @@ onMounted(() => {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
 }
 
+/* Improved beam styling */
 .beam {
   position: absolute;
-  width: 350px;
+  width: 400px; /* Increased from 300px for more spacing */
   height: 12px;
   background: linear-gradient(90deg, #5B86E5 0%, #7AA0F7 50%, #5B86E5 100%);
   border-radius: 6px;
-  top: 120px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  top: 80px; /* Lowered to connect with the stand */
   transform-origin: center;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   z-index: 2;
+}
+
+/* Added visible connection points */
+.connection-point {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background-color: #5B86E5;
+  border: 1px solid #3A75D4;
+  border-radius: 50%;
+  bottom: -4px;
+  z-index: 3;
+}
+
+.left-connection {
+  left: 80px; /* Moved further out from 50px */
+}
+
+.right-connection {
+  right: 80px; /* Moved further out from 50px */
 }
 
 .beam.balanced {
   animation: balance-celebration 0.8s ease-in-out;
 }
 
-.beam.left-heavy {
-  transform-origin: center;
-}
-
-.beam.right-heavy {
-  transform-origin: center;
-}
-
+/* Improved pan container positioning */
 .pan-container {
   position: absolute;
   display: flex;
   flex-direction: column;
   align-items: center;
-  transform-origin: top;
+  transform-origin: top center; /* Better rotation center */
 }
 
 .pan-container.left {
-  left: 20px;
+  left: 80px; /* Moved to match connection point */
+  top: 12px; /* Start exactly at the beam bottom */
 }
 
 .pan-container.right {
-  right: 20px;
+  right: 80px; /* Moved to match connection point */
+  top: 12px; /* Start exactly at the beam bottom */
 }
 
+/* Improved string styling */
 .pan-string {
   width: 2px;
-  height: 60px;
+  height: 50px;
   background-color: #A0AEC0;
-  margin-bottom: -5px;
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
 }
 
+/* Fixed pan shape to be circular */
 .pan {
-  width: 100px;
-  height: 20px;
+  width: 80px;
+  height: 80px; /* Equal height and width for circle */
   background: linear-gradient(180deg, #7AA0F7 0%, #5B86E5 100%);
-  border-radius: 50%;
+  border-radius: 50%; /* Perfect circle */
   display: flex;
   justify-content: center;
   align-items: center;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   transition: all 0.3s ease;
-  transform: perspective(500px) rotateX(10deg);
+  transform: perspective(500px) rotateX(5deg); /* Less extreme tilt */
 }
 
 .pan-inner {
-  width: 90px;
-  height: 15px;
+  width: 70px;
+  height: 70px; /* Equal height and width for circle */
   background: linear-gradient(180deg, #E2E8F0 0%, #CBD5E0 100%);
-  border-radius: 45%;
+  border-radius: 50%; /* Perfect circle */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -317,21 +348,27 @@ onMounted(() => {
   transform: perspective(500px) rotateX(0deg);
 }
 
+/* Fixed content placement to avoid overlaps */
 .pan-content {
   position: absolute;
-  top: -50px;
+  top: -40px; /* Raised above the pan */
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
+  align-items: center;
   gap: 5px;
-  width: 120px;
+  width: 80px; /* Match pan width */
+  height: 40px; /* Fixed height for consistency */
 }
 
 .sum-value {
-  font-size: 2rem;
+  font-size: 1.75rem;
   font-weight: bold;
   color: #4A90E2;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  background-color: rgba(255, 255, 255, 0.7); /* Added background for readability */
+  padding: 2px 8px;
+  border-radius: 10px;
 }
 
 .target-value {
@@ -339,8 +376,8 @@ onMounted(() => {
 }
 
 .number-block {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   background-color: #4A90E2;
   color: white;
   border-radius: 8px;
@@ -348,7 +385,7 @@ onMounted(() => {
   justify-content: center;
   align-items: center;
   font-weight: bold;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
   transition: all 0.3s ease;
 }
@@ -436,23 +473,33 @@ onMounted(() => {
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .beam {
-    width: 280px;
+    width: 320px; /* Adjusted for mobile */
+  }
+  
+  .left-connection {
+    left: 60px;
+  }
+  
+  .right-connection {
+    right: 60px;
   }
   
   .pan-container.left {
-    left: 10px;
+    left: 60px;
   }
   
   .pan-container.right {
-    right: 10px;
+    right: 60px;
   }
   
   .pan {
-    width: 80px;
+    width: 70px;
+    height: 70px;
   }
   
   .pan-inner {
-    width: 72px;
+    width: 60px;
+    height: 60px;
   }
   
   .number-block {
