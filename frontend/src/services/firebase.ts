@@ -1,6 +1,8 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, connectAuthEmulator, Auth } from 'firebase/auth';
-import { getFirestore, connectFirestoreEmulator, Firestore } from 'firebase/firestore';
+import { getAuth, connectAuthEmulator } from 'firebase/auth';
+import type { Auth } from 'firebase/auth';
+import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
+import type { Firestore } from 'firebase/firestore';
 
 // Add try/catch for all Firebase operations
 let app: any;
@@ -72,7 +74,7 @@ try {
       console.error('Failed to connect to Firebase emulators:', emulatorError);
     }
   }
-} catch (error) {
+} catch (error: any) {
   console.error('Error initializing Firebase:', error);
   
   // Create fallback/mock objects if Firebase fails to initialize

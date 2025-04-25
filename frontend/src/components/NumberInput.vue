@@ -128,7 +128,8 @@ function handleInput() {
   
   // Handle NaN
   if (isNaN(newValue)) {
-    newValue = props.min;
+    // Default to 0 explicitly instead of min value
+    newValue = 0;
   }
   
   // Clamp between min and max
@@ -157,7 +158,7 @@ onMounted(() => {
 
 <style scoped>
 .number-input-container {
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
 }
 
 /* Focus outline styles for better visibility */
@@ -168,11 +169,26 @@ button:focus, input:focus {
 
 input[type="number"] {
   -moz-appearance: textfield; /* Firefox */
+  height: 2rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
 }
 
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
+}
+
+/* Make the buttons smaller */
+.decrement-btn, .increment-btn {
+  height: 2rem;
+  width: 2rem;
+  padding: 0.25rem;
+}
+
+.decrement-btn svg, .increment-btn svg {
+  height: 1rem;
+  width: 1rem;
 }
 </style> 

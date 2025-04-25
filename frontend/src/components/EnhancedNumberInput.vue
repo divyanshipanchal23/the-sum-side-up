@@ -36,7 +36,10 @@
       
       <div class="sum-container">
         <div class="sum-label">Sum:</div>
-        <div class="sum-value" :class="{ 'matching': sum === targetValue }">
+        <div class="sum-value" :class="{ 
+          'matching': sum === targetValue,
+          'ready-to-check': sum === targetValue 
+        }">
           {{ sum }}
         </div>
       </div>
@@ -63,13 +66,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted, nextTick } from 'vue';
 import soundService from '../services/soundService';
 
 const props = defineProps({
   initialNumbers: {
     type: Array as () => number[],
-    default: () => [1, 1]
+    default: () => [0, 0]
   },
   minValue: {
     type: Number,
@@ -93,9 +96,19 @@ const emit = defineEmits(['update:numbers', 'sum-change', 'check-answer']);
 
 const numbers = ref([...props.initialNumbers]);
 
-const sum = computed(() => 
-  numbers.value.reduce((total, num) => total + num, 0)
-);
+const sum = computed(() => {
+  // Make sure we're using numbers, not strings
+  const total = numbers.value.reduce((total, num) => {
+    return total + Number(num);
+  }, 0);
+  
+  // Immediately emit the sum whenever it changes
+  nextTick(() => {
+    emit('sum-change', total);
+  });
+  
+  return total;
+});
 
 // Generate a unique color based on the number value
 const getNumberStyle = (value: number) => {
@@ -139,40 +152,70 @@ const updateNumber = (index: number, change: number) => {
 const addNumber = () => {
   if (numbers.value.length < props.maxNumbers) {
     soundService.play('click');
-    numbers.value.push(props.minValue);
-    emit('update:numbers', numbers.value);
+    // Create a new array (important for reactivity)
+    const newNumbers = [...numbers.value, 0];
+    numbers.value = newNumbers;
+    
+    console.log('Adding number, new numbers array:', newNumbers);
+    
+    // Important: Emit the update with the new array
+    emit('update:numbers', newNumbers);
+    
+    // Also emit the sum change
     emit('sum-change', sum.value);
+  } else {
+    console.warn('Cannot add more numbers. Maximum reached:', props.maxNumbers);
   }
 };
 
 const removeNumber = () => {
   if (numbers.value.length > 1) {
     soundService.play('click');
-    numbers.value.pop();
-    emit('update:numbers', numbers.value);
+    // Create a new array (important for reactivity)
+    const newNumbers = [...numbers.value];
+    newNumbers.pop();
+    numbers.value = newNumbers;
+    
+    console.log('Removing number, new numbers array:', newNumbers);
+    
+    // Important: Emit the update with the new array
+    emit('update:numbers', newNumbers);
+    
+    // Also emit the sum change
     emit('sum-change', sum.value);
+  } else {
+    console.warn('Cannot remove numbers. Minimum one number required.');
   }
 };
 
+// Modified: Remove auto-checking behavior but keep visual feedback
 watch(sum, (newSum) => {
-  // Always emit the sum change
-  emit('sum-change', newSum);
-  
   // Check if sum matches target
   if (newSum === props.targetValue) {
-    // Add a small delay to allow the user to see the matching sum
-    setTimeout(() => {
-      emit('check-answer');
-    }, 500);
+    console.log('Sum matches target, but NOT auto-triggering check-answer');
+    // We no longer automatically emit the check-answer event
+    // The user will need to click the Check Answer button
+    
+    // We still emit sum-change to update UI and show the matching state
+    emit('sum-change', newSum);
   }
 });
 
 // Watch for external changes to initialNumbers
 watch(() => props.initialNumbers, (newNumbers) => {
+  console.log('initialNumbers watch triggered:', {
+    new: newNumbers,
+    current: numbers.value
+  });
+  
+  // Only update if there's a real difference
   if (JSON.stringify(newNumbers) !== JSON.stringify(numbers.value)) {
+    console.log('Updating internal numbers from props:', newNumbers);
+    
+    // Create a fresh array to ensure reactivity
     numbers.value = [...newNumbers];
   }
-}, { deep: true });
+}, { deep: true, immediate: true });
 
 onMounted(() => {
   // Initialize with correct values
@@ -186,32 +229,32 @@ onMounted(() => {
 .number-controls {
   background-color: #F0EBFF;
   border-radius: 16px;
-  padding: 1.5rem;
+  padding: 1rem;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
 .controls-title {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: bold;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
   color: #4A4A4A;
 }
 
 .numbers-container {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .number-item {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.25rem;
 }
 
 .number-label {
   font-weight: bold;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   color: #666;
 }
 
@@ -222,13 +265,13 @@ onMounted(() => {
 }
 
 .control-button {
-  width: 40px;
-  height: 40px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   border: none;
   background-color: white;
   color: #4A4A4A;
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -256,12 +299,12 @@ onMounted(() => {
 }
 
 .number-value {
-  width: 50px;
-  height: 50px;
-  border-radius: 10px;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
   background-color: #4A90E2;
   color: white;
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: bold;
   display: flex;
   justify-content: center;
@@ -273,31 +316,32 @@ onMounted(() => {
 .sum-container {
   display: flex;
   align-items: center;
-  margin-top: 1rem;
-  padding-top: 1rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
   border-top: 2px dashed #D1D5DB;
 }
 
 .sum-label {
   font-weight: bold;
-  font-size: 1.1rem;
-  margin-right: 1rem;
+  font-size: 1rem;
+  margin-right: 0.75rem;
   color: #4A4A4A;
 }
 
 .sum-value {
-  width: 60px;
-  height: 60px;
-  border-radius: 12px;
+  width: 50px;
+  height: 50px;
+  border-radius: 10px;
   background-color: #FFD166;
   color: #4A4A4A;
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: bold;
   display: flex;
   justify-content: center;
   align-items: center;
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
+  position: relative;
 }
 
 .sum-value.matching {
@@ -307,17 +351,29 @@ onMounted(() => {
   box-shadow: 0 0 15px rgba(6, 214, 160, 0.5);
 }
 
+.sum-value.ready-to-check::after {
+  content: "✓";
+  position: absolute;
+  bottom: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  color: #06D6A0;
+  font-weight: bold;
+}
+
 .controls-actions {
   display: flex;
-  gap: 1rem;
-  margin-top: 1.5rem;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
 }
 
 .action-button {
-  padding: 0.75rem 1rem;
-  border-radius: 10px;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
   border: none;
   font-weight: bold;
+  font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -359,38 +415,44 @@ onMounted(() => {
 
 @keyframes pulse {
   from {
-    transform: scale(1);
+    box-shadow: 0 0 5px rgba(6, 214, 160, 0.5);
   }
   to {
-    transform: scale(1.05);
+    box-shadow: 0 0 15px rgba(6, 214, 160, 0.8);
   }
 }
 
 /* Make it responsive for smaller screens */
 @media (max-width: 768px) {
   .number-controls {
-    padding: 1rem;
+    padding: 0.75rem;
   }
   
   .control-button {
-    width: 36px;
-    height: 36px;
+    width: 28px;
+    height: 28px;
   }
   
   .number-value {
-    width: 44px;
-    height: 44px;
-    font-size: 1.25rem;
+    width: 36px;
+    height: 36px;
+    font-size: 1.1rem;
   }
   
   .sum-value {
-    width: 50px;
-    height: 50px;
-    font-size: 1.5rem;
+    width: 40px;
+    height: 40px;
+    font-size: 1.25rem;
   }
   
   .controls-actions {
     flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .action-button {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.8rem;
   }
 }
 </style> 

@@ -26,7 +26,7 @@ export interface GameState {
 export const useGameStore = defineStore('game', () => {
   // Default game configuration
   const config = ref<GameConfig>({
-    minValue: 1,
+    minValue: 0,
     maxValue: 10,
     maxAddends: 2,
     targetRange: {
@@ -266,7 +266,7 @@ export const useGameStore = defineStore('game', () => {
     
     // Create a completely new state object to ensure reactivity
     gameState.value = {
-      addends: Array(config.value.maxAddends).fill(0),
+      addends: Array(config.value.maxAddends).fill(0), // CRITICAL: Always use 0, never default to min value
       attempts: 0,
       successes: 0,
       currentLevel: 1,

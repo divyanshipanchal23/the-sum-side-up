@@ -333,7 +333,8 @@ import NumberInput from '../components/NumberInput.vue';
 import { useAuthStore } from '../stores/authStore';
 import soundService from '../services/soundService';
 import { v4 as uuidv4 } from 'uuid';
-import configService, { GameConfig } from '../services/configService';
+import configService from '../services/configService';
+import type { GameConfig } from '../types';
 import { isEqual } from 'lodash';
 
 const router = useRouter();

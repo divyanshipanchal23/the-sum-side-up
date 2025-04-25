@@ -6,11 +6,12 @@ const hasError = ref(false);
 const errorMessage = ref('');
 
 // Error handler to display errors instead of blank screen
-const handleErrors = (err: unknown) => {
+// @ts-ignore - function is defined for future use
+function handleErrors(err: unknown) {
   console.error('App error:', err);
   hasError.value = true;
   errorMessage.value = err instanceof Error ? err.message : String(err);
-};
+}
 
 // Preload game resources when the app is mounted
 onMounted(() => {
@@ -29,6 +30,11 @@ onMounted(() => {
     console.error('Error in resource preloading:', err);
   }
 });
+
+// Safe reload function that uses the global window object
+function reloadPage() {
+  window.location.reload();
+}
 </script>
 
 <template>
@@ -37,7 +43,7 @@ onMounted(() => {
     <div class="error-container">
       <h1>Something went wrong</h1>
       <p>{{ errorMessage }}</p>
-      <button @click="window.location.reload()">Reload Page</button>
+      <button @click="reloadPage">Reload Page</button>
     </div>
   </div>
   <router-view v-else />

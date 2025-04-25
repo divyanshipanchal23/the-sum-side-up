@@ -67,8 +67,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, nextTick } from 'vue';
-import { useGameStore } from '@/stores/gameStore';
+import { ref, computed, watch, onMounted } from 'vue';
+
+// Import the useGameStore function correctly
+import { useGameStore } from '../stores/gameStore';
 
 const props = defineProps<{
   leftValue: number;
@@ -82,10 +84,11 @@ defineExpose({
   resetScale
 });
 
-// Set up game store for target number
+// Use the game store directly
 const gameStore = useGameStore();
+
 // Create a computed property to access the targetNumber
-const targetNumber = computed(() => gameStore.targetNumber);
+const targetNumber = computed(() => gameStore.targetNumber || 0);
 
 // Create internal refs for left and right values to avoid direct prop binding issues
 const leftValue = ref(Number(props.leftValue) || 0);
@@ -187,13 +190,15 @@ const getBalanceDescription = computed(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 2rem 0;
+  padding: 1rem 0; /* Increased from 0.25rem for more vertical space */
+  margin-bottom: 0;
+  min-height: 180px; /* Added minimum height */
 }
 
 .scale-base {
   position: relative;
   width: 100%;
-  height: 300px; /* Increased height for better proportions */
+  height: 150px; /* Maintained height but will have more space around it */
 }
 
 /* Base of the stand */
@@ -202,23 +207,23 @@ const getBalanceDescription = computed(() => {
   left: 50%;
   bottom: 0;
   transform: translateX(-50%);
-  width: 100px;
-  height: 20px;
+  width: 60px; /* Reduced from 80px */
+  height: 12px; /* Reduced from 15px */
   background-color: #FFD166; /* Sunshine Yellow */
-  border-radius: 6px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 4px; /* Reduced from 6px */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 /* Vertical stand */
 .scale-stand {
   position: absolute;
   left: 50%;
-  bottom: 20px;
+  bottom: 12px; /* Adjusted for smaller base */
   transform: translateX(-50%);
-  width: 20px;
-  height: 180px;
+  width: 14px; /* Reduced from 16px */
+  height: 90px; /* Reduced from 120px */
   background-color: #4A90E2; /* Primary Blue */
-  border-radius: 6px 6px 0 0;
+  border-radius: 4px 4px 0 0; /* Reduced from 6px */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -226,12 +231,12 @@ const getBalanceDescription = computed(() => {
 .scale-fulcrum {
   position: absolute;
   left: 50%;
-  bottom: 200px;
+  bottom: 102px; /* Adjusted for smaller stand */
   transform: translateX(-50%);
-  width: 40px;
-  height: 15px;
+  width: 25px; /* Reduced from 30px */
+  height: 10px; /* Reduced from 12px */
   background-color: #BDADEA; /* Light Lavender */
-  border-radius: 6px;
+  border-radius: 4px; /* Reduced from 6px */
   z-index: 5;
 }
 
@@ -239,11 +244,11 @@ const getBalanceDescription = computed(() => {
 .scale-beam {
   position: absolute;
   left: 50%;
-  bottom: 210px;
-  width: 80%;
-  height: 8px;
+  bottom: 106px; /* Adjusted for smaller stand */
+  width: 65%; /* Reduced from 70% */
+  height: 5px; /* Reduced from 6px */
   background-color: #4A90E2; /* Primary Blue */
-  border-radius: 4px;
+  border-radius: 3px; /* Reduced from 4px */
   transform-origin: center center;
   transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
   z-index: 4;
@@ -254,8 +259,8 @@ const getBalanceDescription = computed(() => {
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  width: 14px;
-  height: 14px;
+  width: 8px; /* Reduced from 10px */
+  height: 8px; /* Reduced from 10px */
   background-color: #BDADEA; /* Light Lavender */
   border-radius: 50%;
   border: 2px solid #4A90E2; /* Primary Blue */
@@ -266,9 +271,9 @@ const getBalanceDescription = computed(() => {
 .scale-chain {
   position: absolute;
   width: 2px;
-  height: 60px;
+  height: 35px; /* Reduced from 40px */
   background-color: #BDADEA; /* Light Lavender */
-  top: 4px; /* Start from beam */
+  top: 2.5px; /* Adjusted for smaller beam */
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); /* Match beam animation */
 }
 
@@ -283,17 +288,17 @@ const getBalanceDescription = computed(() => {
 /* Scale pans */
 .scale-pan {
   position: absolute;
-  width: 80px;
-  height: 80px;
+  width: 50px; /* Reduced from 60px */
+  height: 50px; /* Reduced from 60px */
   border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
   color: white;
-  font-size: 1.5rem;
+  font-size: 1.1rem; /* Reduced from 1.25rem */
   font-weight: bold;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  top: 64px; /* Chain height + beam height */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Reduced shadow */
+  top: 37.5px; /* Adjusted for smaller chain */
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); /* Match beam animation */
 }
 
@@ -324,11 +329,24 @@ const getBalanceDescription = computed(() => {
   /* These classes can be used for additional styling */
 }
 
+.scale-values {
+  background-color: #F0EBFF; /* Secondary Background */
+  padding: 2px 8px; /* Reduced from 4px 12px */
+  border-radius: 6px; /* Reduced from 8px */
+  margin-top: 2px; /* Reduced from 5px */
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  font-size: 0.8rem; /* Reduced from 0.9rem */
+  position: relative; /* Add position relative */
+  top: 15px; /* Push down to close the gap */
+}
+
 .scale-feedback {
-  margin-top: 2rem;
-  font-size: 1.2rem;
+  margin-top: 0.25rem; /* Reduced from 0.5rem */
+  font-size: 0.85rem; /* Reduced from 1rem */
   font-weight: bold;
   text-align: center;
+  position: relative; /* Add position relative */
+  top: 15px; /* Push down to close the gap */
 }
 
 /* Screen reader only class */
@@ -342,13 +360,5 @@ const getBalanceDescription = computed(() => {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border-width: 0;
-}
-
-.scale-values {
-  background-color: #F0EBFF; /* Secondary Background */
-  padding: 8px 16px;
-  border-radius: 10px;
-  margin-top: 10px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 </style> 

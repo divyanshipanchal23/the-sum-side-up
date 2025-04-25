@@ -155,11 +155,13 @@ onMounted(() => {
 .balance-scale-container {
   position: relative;
   width: 100%;
-  height: 350px;
+  height: 180px; /* Increased from 150px to match the simple scale's new spacing */
   display: flex;
   justify-content: center;
   align-items: center;
   perspective: 800px;
+  margin-bottom: 0;
+  padding: 1rem 0; /* Added vertical padding for more space */
 }
 
 .fulcrum {
@@ -174,45 +176,45 @@ onMounted(() => {
 /* Vertical beam styling */
 .vertical-beam {
   position: absolute;
-  width: 20px;
-  height: 280px; /* Increased height to ensure full connection */
+  width: 14px; /* Reduced from 16px */
+  height: 110px; /* Reduced from 140px */
   background-color: #9370DB; /* Purple */
-  border-radius: 5px 5px 0 0; /* Round top corners only */
-  bottom: 15px; /* Position to connect with stand-base */
+  border-radius: 4px 4px 0 0; /* Reduced from 5px */
+  bottom: 12px; /* Position to connect with stand-base */
   z-index: 3; /* Ensure it's above the stand but below the beam */
 }
 
 .stand-top {
-  width: 30px;
-  height: 10px;
+  width: 20px; /* Reduced from 24px */
+  height: 6px; /* Reduced from 8px */
   background-color: #9370DB;
-  border-radius: 5px;
-  margin-bottom: -5px;
+  border-radius: 4px; /* Reduced from 5px */
+  margin-bottom: -4px; /* Reduced from -5px */
   z-index: 2;
 }
 
 .stand {
-  width: 20px;
-  height: 180px;
+  width: 14px; /* Reduced from 16px */
+  height: 90px; /* Reduced from 120px */
   background-color: transparent; /* Make invisible as we're using vertical-beam instead */
 }
 
 .stand-base {
-  width: 60px;
-  height: 15px;
+  width: 40px; /* Reduced from 50px */
+  height: 10px; /* Reduced from 12px */
   background-color: #9370DB;
-  border-radius: 5px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  border-radius: 4px; /* Reduced from 5px */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 /* Improved beam styling */
 .beam {
   position: absolute;
-  width: 600px; /* Increased width to match reference image */
-  height: 12px;
+  width: 450px; /* Reduced from 500px */
+  height: 8px; /* Reduced from 10px */
   background: linear-gradient(90deg, #4A90E2 0%, #6FA9F7 50%, #4A90E2 100%);
-  border-radius: 6px;
-  top: 80px; /* Positioned to connect with vertical beam */
+  border-radius: 4px; /* Reduced from 5px */
+  top: 45px; /* Adjusted from 55px */
   transform-origin: center;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   z-index: 2;
@@ -221,17 +223,17 @@ onMounted(() => {
 /* Added visible connection points */
 .connection-point {
   position: absolute;
-  width: 8px;
-  height: 8px;
+  width: 5px; /* Reduced from 6px */
+  height: 5px; /* Reduced from 6px */
   background-color: #4A90E2;
   border: 1px solid #3A75D4;
   border-radius: 50%;
-  bottom: -4px;
+  bottom: -2.5px; /* Adjusted for smaller size */
   z-index: 3;
 }
 
 .left-connection {
-  left: 150px;
+  left: 100px; /* Reduced from 120px */
 }
 
 .center-connection {
@@ -240,7 +242,7 @@ onMounted(() => {
 }
 
 .right-connection {
-  right: 150px;
+  right: 100px; /* Reduced from 120px */
 }
 
 .beam.balanced {
@@ -257,39 +259,39 @@ onMounted(() => {
 }
 
 .pan-container.left {
-  left: 150px;
-  top: 12px;
+  left: 100px; /* Reduced from 120px */
+  top: 8px; /* Reduced from 10px */
 }
 
 .pan-container.right {
-  right: 150px;
-  top: 12px;
+  right: 100px; /* Reduced from 120px */
+  top: 8px; /* Reduced from 10px */
 }
 
 /* Improved string styling */
 .pan-string {
   width: 2px;
-  height: 70px;
+  height: 40px; /* Reduced from 50px */
   background-color: #A0AEC0;
   box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
 }
 
 /* Fixed pan shape to be circular */
 .pan {
-  width: 90px;
-  height: 90px;
+  width: 60px; /* Reduced from 70px */
+  height: 60px; /* Reduced from 70px */
   background: linear-gradient(180deg, #4A90E2 0%, #6FA9F7 100%);
   border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2); /* Reduced from 0 4px 8px */
   transition: all 0.3s ease;
 }
 
 .pan-inner {
-  width: 80px;
-  height: 80px;
+  width: 50px; /* Reduced from 60px */
+  height: 50px; /* Reduced from 60px */
   background: #E2E8F0;
   border-radius: 50%;
   display: flex;
@@ -298,7 +300,7 @@ onMounted(() => {
 }
 
 .pan-number {
-  font-size: 2rem;
+  font-size: 1.3rem; /* Reduced from 1.5rem */
   font-weight: bold;
   color: #4A90E2;
 }
@@ -309,14 +311,14 @@ onMounted(() => {
 
 .balance-indicator {
   position: absolute;
-  top: 35px; /* Adjusted position to match reference image */
+  top: 70px; /* Adjusted from 20px to push it further down */
   background-color: #06D6A0;
   color: white;
-  padding: 0.75rem 1.5rem;
-  border-radius: 20px;
+  padding: 0.4rem 0.8rem; /* Reduced from 0.5rem 1rem */
+  border-radius: 12px; /* Reduced from 16px */
   font-weight: bold;
-  font-size: 1.2rem;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  font-size: 0.9rem; /* Reduced from 1rem */
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2); /* Reduced from 0 4px 8px */
   z-index: 10;
 }
 
@@ -346,45 +348,45 @@ onMounted(() => {
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .beam {
-    width: 320px;
+    width: 280px; /* Reduced from 320px */
   }
   
   .left-connection {
-    left: 60px;
+    left: 50px; /* Reduced from 60px */
   }
   
   .right-connection {
-    right: 60px;
+    right: 50px; /* Reduced from 60px */
   }
   
   .pan-container.left {
-    left: 60px;
+    left: 50px; /* Reduced from 60px */
   }
   
   .pan-container.right {
-    right: 60px;
+    right: 50px; /* Reduced from 60px */
   }
   
   .pan {
-    width: 80px;
-    height: 80px;
+    width: 60px; /* Reduced from 80px */
+    height: 60px; /* Reduced from 80px */
   }
   
   .pan-inner {
-    width: 70px;
-    height: 70px;
+    width: 50px; /* Reduced from 70px */
+    height: 50px; /* Reduced from 70px */
   }
   
   .pan-number {
-    font-size: 1.5rem;
+    font-size: 1.25rem; /* Reduced from 1.5rem */
   }
   
   .vertical-beam {
-    height: 220px;
+    height: 120px; /* Reduced from 220px */
   }
   
   .pan-string {
-    height: 50px;
+    height: 40px; /* Reduced from 50px */
   }
 }
 </style> 

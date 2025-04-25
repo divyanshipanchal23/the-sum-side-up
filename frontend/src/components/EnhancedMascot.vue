@@ -179,6 +179,19 @@ onUnmounted(() => {
   transform: translateX(-50%);
 }
 
+.top-center {
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* New position class for welcome screen with right-side speech bubble */
+.top-center-right {
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
 .mascot {
   width: 120px;
   height: 120px;
@@ -322,53 +335,48 @@ onUnmounted(() => {
 
 /* Improved speech bubble styling */
 .speech-bubble {
+  position: absolute;
   background-color: white;
   border: 2px solid #4A90E2;
-  border-radius: 1rem;
-  padding: 0.75rem 1rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  padding: 10px 15px;
+  min-width: 150px;
   max-width: 200px;
-  min-width: 120px;
-  position: absolute;
-  z-index: 60;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
   cursor: pointer;
-  color: #333;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+  z-index: 60;
 }
 
-/* Adjust speech bubble position based on mascot position */
-.bottom-right .speech-bubble {
-  bottom: 130px;
+/* Position the speech bubble for different mascot positions */
+.bottom-right .speech-bubble,
+.bottom-left .speech-bubble,
+.bottom-center .speech-bubble {
+  top: -20px;
   left: 50%;
   transform: translateX(-50%);
 }
 
-.top-right .speech-bubble {
-  top: -60px;
+.top-right .speech-bubble,
+.top-left .speech-bubble,
+.top-center .speech-bubble {
+  bottom: -60px;
   left: 50%;
   transform: translateX(-50%);
 }
 
-.bottom-left .speech-bubble {
-  bottom: 130px;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.top-left .speech-bubble {
-  top: -60px;
-  left: 50%;
-  transform: translateX(-50%);
+/* New position for welcome screen - speech bubble on right side */
+.top-center-right .speech-bubble {
+  right: -230px;
+  top: 40%;
+  transform: translateY(-50%);
+  max-width: 220px;
 }
 
 .center-left .speech-bubble {
-  left: 120px;
-  top: 30px;
-}
-
-.bottom-center .speech-bubble {
-  bottom: 130px;
-  left: 50%;
-  transform: translateX(-50%);
+  right: -180px;
+  top: 40%;
+  transform: translateY(-50%);
 }
 
 .message-text {
@@ -385,7 +393,8 @@ onUnmounted(() => {
 }
 
 /* Position the arrow based on container position */
-.center-left .speech-bubble:after {
+.center-left .speech-bubble:after,
+.top-center-right .speech-bubble:after {
   left: -10px;
   top: 50%;
   transform: translateY(-50%);
@@ -421,7 +430,8 @@ onUnmounted(() => {
   /* Border arrow will be positioned in similar places as the white arrow but slightly offset */
 }
 
-.center-left .speech-bubble:before {
+.center-left .speech-bubble:before,
+.top-center-right .speech-bubble:before {
   left: -12px;
   top: 50%;
   transform: translateY(-50%);

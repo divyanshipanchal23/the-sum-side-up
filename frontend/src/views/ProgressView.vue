@@ -242,7 +242,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useAuthStore } from '../stores/authStore';
-import progressService, { UserProgress } from '../services/progressService';
+import progressService from '../services/progressService';
+import type { UserProgress } from '../types';
 import soundService from '../services/soundService';
 
 // Initialize auth store
