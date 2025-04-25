@@ -11,6 +11,10 @@
       </div>
     </Transition>
     
+    <div class="reset-button" v-if="isMobile && isCustomPositioned" @click="resetPosition">
+      Reset
+    </div>
+    
     <div 
       class="mascot" 
       :class="[animation, { 'hovered': isHovered }]" 
@@ -134,6 +138,7 @@ const isMobile = ref(false);
 const isDragging = ref(false);
 const dragOffset = ref({ x: 0, y: 0 });
 const position = ref({ x: null, y: null });
+const isCustomPositioned = ref(false);
 const mascotContainerRef = ref(null);
 
 // Computed style for draggable positioning
@@ -155,6 +160,7 @@ const loadSavedPosition = () => {
   if (savedPosition) {
     try {
       position.value = JSON.parse(savedPosition);
+      isCustomPositioned.value = true;
     } catch (e) {
       console.error('Failed to parse saved mascot position:', e);
     }
@@ -164,6 +170,19 @@ const loadSavedPosition = () => {
 // Save position to localStorage
 const savePosition = () => {
   localStorage.setItem('mascotPosition', JSON.stringify(position.value));
+  isCustomPositioned.value = true;
+};
+
+// Reset position
+const resetPosition = (e?: Event) => {
+  if (e) e.stopPropagation();
+  
+  // Clear custom position
+  position.value = { x: null, y: null };
+  isCustomPositioned.value = false;
+  
+  // Remove from localStorage
+  localStorage.removeItem('mascotPosition');
 };
 
 // Touch event handlers
@@ -200,6 +219,24 @@ const handleTouchEnd = () => {
   if (!isDragging.value) return;
   
   isDragging.value = false;
+  
+  // Don't save if moved off-screen
+  const width = window.innerWidth;
+  const height = window.innerHeight;
+  
+  if (
+    position.value.x < 0 || 
+    position.value.x > width - 60 || 
+    position.value.y < 0 || 
+    position.value.y > height - 60
+  ) {
+    // If mascot is dragged off-screen, reset it to a safe position
+    position.value = {
+      x: Math.max(10, Math.min(width - 80, position.value.x)),
+      y: Math.max(10, Math.min(height - 80, position.value.y))
+    };
+  }
+  
   savePosition();
 };
 
@@ -254,6 +291,7 @@ onUnmounted(() => {
 .mascot-container.draggable {
   position: fixed;
   transition: none; /* Disable transition for smoother dragging */
+  z-index: 999; /* Ensure it's above other elements */
 }
 
 /* Visual indication when dragging */
@@ -531,11 +569,50 @@ onUnmounted(() => {
   transform: translateY(-50%);
 }
 
+/* Mobile specific speech bubble positioning */
+@media (max-width: 768px) {
+  /* For draggable mascots, position speech bubble above the mascot */
+  .mascot-container.draggable .speech-bubble {
+    top: -80px;
+    left: 50%;
+    transform: translateX(-50%);
+    min-width: 120px;
+    max-width: 180px;
+    font-size: 0.8rem;
+  }
+  
+  /* Adjust arrow for mobile speech bubbles */
+  .mascot-container.draggable .speech-bubble:after {
+    bottom: -10px;
+    top: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 10px 10px 0;
+    border-color: white transparent transparent;
+  }
+  
+  /* Adjust border arrow for mobile speech bubbles */
+  .mascot-container.draggable .speech-bubble:before {
+    bottom: -12px;
+    top: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    border-width: 12px 12px 0;
+    border-color: #4A90E2 transparent transparent;
+  }
+}
+
 .message-text {
   margin: 0;
   font-size: 0.9rem;
   line-height: 1.4;
   color: #333;
+}
+
+@media (max-width: 768px) {
+  .message-text {
+    font-size: 0.8rem;
+  }
 }
 
 .speech-bubble:after {
@@ -704,5 +781,25 @@ onUnmounted(() => {
   .center-left .speech-bubble {
     left: 110px;
   }
+}
+
+/* Reset button styling */
+.reset-button {
+  position: absolute;
+  top: -30px;
+  right: 0;
+  background-color: rgba(255, 255, 255, 0.9);
+  color: #4A90E2;
+  border: 1px solid #4A90E2;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 10px;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.reset-button:active {
+  background-color: #4A90E2;
+  color: white;
 }
 </style> 
