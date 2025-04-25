@@ -1,12 +1,14 @@
 import sys
 import os
 
-# Add the backend directory to the path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+# Try to add the backend directory to the path
+try:
+    sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+except:
+    print("Could not add parent directory to path")
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from backend.app.api.game import router as game_router
 
 app = FastAPI(
     title="Balance Scale Addition Game API",
@@ -19,7 +21,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://your-frontend-url-placeholder.vercel.app",  # Update this with your frontend URL
+        "https://the-sum-side-up.vercel.app",  # Frontend URL (removed trailing slash)
         "http://localhost:5173",  # Vue dev server
     ],
     allow_credentials=True,
@@ -27,8 +29,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers
-app.include_router(game_router)
+# Simple test route
+@app.get("/api/test")
+async def test():
+    return {"status": "API is working"}
 
 @app.get("/")
 async def root():
