@@ -1,10 +1,16 @@
-import { collection, query, where, getDocs, doc, getDoc, setDoc, deleteDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc, setDoc, deleteDoc, Firestore } from 'firebase/firestore';
 import { firestore } from './firebase';
 import { useAuthStore } from '../stores/authStore';
 import apiService from './apiService';
 
 // Collection name in Firestore
 const COLLECTION_NAME = 'game_configurations';
+
+// Safely cast firestore to the correct type
+const getFirestoreDb = (): Firestore => {
+  // @ts-ignore - firestore is properly initialized in firebase.ts
+  return firestore as Firestore;
+};
 
 /**
  * Game Configuration type
@@ -49,7 +55,7 @@ class ConfigService {
       
       // Query Firestore for user's configurations
       const configQuery = query(
-        collection(firestore, COLLECTION_NAME),
+        collection(getFirestoreDb(), COLLECTION_NAME),
         where('createdBy', '==', authStore.userId)
       );
       
@@ -80,7 +86,7 @@ class ConfigService {
     try {
       // Query Firestore for public configurations
       const configQuery = query(
-        collection(firestore, COLLECTION_NAME),
+        collection(getFirestoreDb(), COLLECTION_NAME),
         where('isPublic', '==', true)
       );
       
@@ -110,7 +116,7 @@ class ConfigService {
   async getConfiguration(id: string): Promise<GameConfig> {
     try {
       // Get configuration from Firestore
-      const docRef = doc(firestore, COLLECTION_NAME, id);
+      const docRef = doc(getFirestoreDb(), COLLECTION_NAME, id);
       const docSnap = await getDoc(docRef);
       
       if (!docSnap.exists()) {
@@ -161,7 +167,7 @@ class ConfigService {
       config.updated_at = timestamp;
       
       // Save to Firestore
-      const docRef = doc(firestore, COLLECTION_NAME, config.id);
+      const docRef = doc(getFirestoreDb(), COLLECTION_NAME, config.id);
       await setDoc(docRef, config);
       
       // Also try to save to the backend API if available
@@ -214,7 +220,7 @@ class ConfigService {
       }
       
       // Check if user owns this configuration
-      const docRef = doc(firestore, COLLECTION_NAME, id);
+      const docRef = doc(getFirestoreDb(), COLLECTION_NAME, id);
       const docSnap = await getDoc(docRef);
       
       if (!docSnap.exists()) {

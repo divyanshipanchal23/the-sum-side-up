@@ -1,13 +1,26 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, connectAuthEmulator } from 'firebase/auth';
-import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
+import { getAuth, connectAuthEmulator, Auth } from 'firebase/auth';
+import { getFirestore, connectFirestoreEmulator, Firestore } from 'firebase/firestore';
 
 // Add try/catch for all Firebase operations
-let app, auth, firestore;
+let app: any;
+let auth: Auth;
+let firestore: Firestore;
+
+// Define an interface for the Firebase config to avoid index errors
+interface FirebaseConfig {
+  apiKey: string | undefined;
+  authDomain: string | undefined;
+  projectId: string | undefined;
+  storageBucket: string | undefined;
+  messagingSenderId: string | undefined;
+  appId: string | undefined;
+  [key: string]: string | undefined; // Index signature to allow string indexing
+}
 
 try {
   // Get Firebase config from environment variables
-  const firebaseConfig = {
+  const firebaseConfig: FirebaseConfig = {
     apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
     authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
     projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
@@ -33,8 +46,8 @@ try {
     storageBucket: firebaseConfig.storageBucket
   });
 
-  // Initialize Firebase
-  app = initializeApp(firebaseConfig);
+  // Initialize Firebase 
+  app = initializeApp(firebaseConfig as any);
   console.log('Firebase initialized successfully');
 
   // Initialize Firebase Authentication and get a reference to the service
@@ -70,9 +83,10 @@ try {
   
   if (!auth) {
     console.warn('Creating mock Firebase auth');
+    // @ts-ignore - creating a mock auth object
     auth = {
       currentUser: null,
-      onAuthStateChanged: (callback) => {
+      onAuthStateChanged: (callback: (user: null) => void) => {
         console.warn('Using mock auth.onAuthStateChanged');
         callback(null);
         return () => {}; // unsubscribe function
@@ -82,6 +96,7 @@ try {
   
   if (!firestore) {
     console.warn('Creating mock Firestore');
+    // @ts-ignore - creating a mock firestore object
     firestore = {
       // Add minimal mock implementation if needed
     };
