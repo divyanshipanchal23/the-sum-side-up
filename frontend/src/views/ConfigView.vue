@@ -252,44 +252,47 @@
             </div>
           </div>
           
-          <!-- Error message -->
-          <div v-if="error" class="bg-red-50 border-l-4 border-red-400 p-4">
-            <div class="flex">
-              <div class="flex-shrink-0">
-                <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-                </svg>
-              </div>
-              <div class="ml-3">
-                <p class="text-sm text-red-700">{{ error }}</p>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Unsaved changes indicator -->
-          <div v-if="formDirty && !successMessage && !error" class="bg-blue-50 border-l-4 border-blue-400 p-4">
-            <div class="flex">
-              <div class="flex-shrink-0">
-                <svg class="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9a1 1 0 00-1-1z" clip-rule="evenodd" />
-                </svg>
-              </div>
-              <div class="ml-3">
-                <p class="text-sm text-blue-700">You have unsaved changes. Click "Save Configuration" to save your changes.</p>
+          <!-- Success and Error Messages -->
+          <div class="space-y-4 mb-6">
+            <!-- Unsaved changes warning -->
+            <div v-if="formDirty && !successMessage && !error" class="bg-blue-50 border-l-4 border-blue-400 p-4">
+              <div class="flex">
+                <div class="flex-shrink-0">
+                  <svg class="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                  </svg>
+                </div>
+                <div class="ml-3 text-sm">
+                  <p class="text-blue-700">You have unsaved changes. Click "Save Configuration" to save your changes.</p>
+                </div>
               </div>
             </div>
-          </div>
-          
-          <!-- Success message -->
-          <div v-if="successMessage" class="bg-green-50 border-l-4 border-green-400 p-4">
-            <div class="flex">
-              <div class="flex-shrink-0">
-                <svg class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                </svg>
+            
+            <!-- Success message -->
+            <div v-if="successMessage" class="bg-green-50 border-l-4 border-green-400 p-4">
+              <div class="flex">
+                <div class="flex-shrink-0">
+                  <svg class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                  </svg>
+                </div>
+                <div class="ml-3 text-sm">
+                  <p class="text-sm text-green-700" v-html="successMessage"></p>
+                </div>
               </div>
-              <div class="ml-3">
-                <p class="text-sm text-green-700">{{ successMessage }}</p>
+            </div>
+            
+            <!-- Error message -->
+            <div v-if="error" class="bg-red-50 border-l-4 border-red-400 p-4">
+              <div class="flex">
+                <div class="flex-shrink-0">
+                  <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                  </svg>
+                </div>
+                <div class="ml-3 text-sm">
+                  <p class="text-red-700">{{ error }}</p>
+                </div>
               </div>
             </div>
           </div>
@@ -535,15 +538,15 @@ async function saveConfiguration(event: Event) {
     successMessage.value = null;
     
     // Show success message with configuration ID
-    successMessage.value = `Configuration saved successfully! ID: ${configForm.value.id} Copy This ID to share with others!`;
+    successMessage.value = `Configuration saved successfully! ID: ${configForm.value.id} Copy This ID to share with others! <a href="https://the-sum-side-up.vercel.app/game?configId=${configForm.value.id}" class="text-indigo-600 underline">Click here to play this game</a>`;
     
-    // Auto-hide success message after 4 seconds for better UX
+    // Auto-hide success message after 10 seconds for better UX
     setTimeout(() => {
       // Only clear if it's the same message (in case of multiple saves)
       if (successMessage.value && successMessage.value.includes(configForm.value.id)) {
         successMessage.value = null;
       }
-    }, 4000);
+    }, 10000);
     
     // Play success sound
     soundService.play('correct');
@@ -566,14 +569,14 @@ async function saveConfiguration(event: Event) {
       successMessage.value = null;
       
       // Show partial success message
-      successMessage.value = `Configuration saved to your account! ID: ${configForm.value.id} (Note: Could not sync to online database)`;
+      successMessage.value = `Configuration saved to your account! ID: ${configForm.value.id} (Note: Could not sync to online database) <a href="https://the-sum-side-up.vercel.app/game?configId=${configForm.value.id}" class="text-indigo-600 underline">Click here to play this game</a>`;
       
-      // Auto-hide this message too
+      // Auto-hide this message too after 10 seconds
       setTimeout(() => {
         if (successMessage.value && successMessage.value.includes(configForm.value.id)) {
           successMessage.value = null;
         }
-      }, 4000);
+      }, 10000);
       
       soundService.play('correct');
       formDirty.value = false;  // Mark as saved even with API error
