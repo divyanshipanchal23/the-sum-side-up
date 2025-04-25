@@ -1,189 +1,106 @@
 <template>
-  <div class="min-h-screen bg-background-soft p-4">
-    <div class="max-w-6xl mx-auto">
-      <h1 class="text-3xl font-bold text-primary mb-6">Balance Scale Addition Game</h1>
+  <div class="game-container-bg">
+    <!-- Animated background elements -->
+    <div class="floating-elements">
+      <div v-for="n in 12" :key="`element-${n}`" 
+           class="floating-element" 
+           :class="`element-${n}`"
+           :style="getRandomStyle()">
+        {{ getRandomMathSymbol() }}
+      </div>
+    </div>
+    
+    <div class="max-w-6xl mx-auto w-full p-4">
+      <h1 class="game-title">The Sum Side Up</h1>
       
-      <div class="bg-white rounded-lg shadow-lg p-6">
-        <div v-if="!gameStarted" class="text-center py-8">
-          <!-- Add mascot to welcome screen -->
-          <div class="flex justify-center mb-4">
-            <BalancerBuddy 
+      <div class="content-card">
+        <div v-if="!gameStarted" class="welcome-screen">
+          <!-- Add mascot to welcome screen with proper spacing -->
+          <div class="mascot-container">
+            <EnhancedMascot
               message="Welcome! Ready to balance some equations?" 
-              expression="happy"
+              state="celebrating"
+              animation="bounce"
+              position="top-center-right"
               @messageDismissed="handleMessageDismissed"
             />
           </div>
           
-          <h2 class="text-2xl font-bold text-gray-800 mb-4">Ready to Play?</h2>
-          <p class="text-gray-600 mb-6">
+          <h2 class="welcome-heading">Ready to Play?</h2>
+          <p class="welcome-text">
             Add numbers on the left side to balance the target number on the right side!
           </p>
           <button 
             @click="startGame" 
-            class="px-6 py-3 bg-accent-yellow text-black font-medium rounded-lg border border-accent-yellow hover:bg-accent-yellow/80 transition duration-300"
+            class="start-button"
           >
             Start Game
           </button>
+          
+          <div class="back-link-container">
+            <router-link to="/" class="back-link">
+              Back to Home
+            </router-link>
+          </div>
         </div>
         
-        <div v-else>
-          <div class="game-header flex justify-between items-center mb-6">
-            <div class="level-info">
-              <span class="font-semibold text-gray-700">Level: </span>
-              <span class="text-primary font-bold">{{ gameState.currentLevel }}</span>
+        <div v-else class="game-interface">
+          <!-- Level and sound control - Updated with more attractive styles -->
+          <div class="header-controls flex justify-between items-center mb-2">
+            <div class="level-badge">
+              <span class="level-label">Level</span>
+              <span class="level-number">{{ gameState.currentLevel }}</span>
             </div>
             
-            <!-- Time Remaining (new) -->
-            <div v-if="remainingTime !== null" class="time-info">
-              <span class="font-semibold text-gray-700">Time: </span>
-              <span class="text-primary font-bold" :class="{ 'text-accent-red': remainingTime < 5 }">
-                {{ remainingTime }}s
-              </span>
+            <div class="controls-right flex items-center space-x-2">
+              <button 
+                @click="toggleMute"
+                class="sound-button"
+                :title="isMuted ? 'Unmute sounds' : 'Mute sounds'"
+                aria-label="Toggle sound"
+              >
+                <span v-if="isMuted" class="sound-icon">🔇</span>
+                <span v-else class="sound-icon">🔊</span>
+              </button>
+              
+              <!-- Time Remaining (new) -->
+              <div v-if="remainingTime !== null" class="time-badge">
+                <span class="time-label">Time</span>
+                <span class="time-number" :class="{ 'hurry-up': remainingTime < 5 }">
+                  {{ remainingTime }}s
+                </span>
+              </div>
             </div>
             
-            <!-- Sound Control Button -->
-            <button 
-              @click="toggleMute" 
-              class="mx-4 p-2 rounded-full bg-background-secondary hover:bg-background-secondary/80 focus:outline-none focus:ring-2 focus:ring-primary"
-              :title="isMuted ? 'Unmute sounds' : 'Mute sounds'"
-              aria-label="Toggle sound"
-            >
-              <svg v-if="isMuted" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
-              </svg>
-              <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-              </svg>
-            </button>
-            
-            <!-- Enhanced Scale Toggle -->
-            <button 
-              @click="toggleEnhancedScale" 
-              class="mx-4 p-2 rounded-full bg-background-secondary hover:bg-background-secondary/80 focus:outline-none focus:ring-2 focus:ring-primary"
-              :title="useEnhancedScale ? 'Use Simple Scale' : 'Use Enhanced Scale'"
-              aria-label="Toggle scale style"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" :class="useEnhancedScale ? 'text-primary' : 'text-gray-600'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
-              </svg>
-            </button>
-            
-            <div class="score-info">
-              <span class="font-semibold text-gray-700">Score: </span>
-              <span class="text-primary font-bold">{{ gameState.successes }}/{{ gameState.attempts }}</span>
+            <div class="score-badge">
+              <span class="score-label">Score</span>
+              <span class="score-number">{{ gameState.successes }}/{{ gameState.attempts }}</span>
             </div>
           </div>
           
-          <div class="game-instructions bg-accent-purple/20 border-l-4 border-accent-purple p-4 mb-6 rounded-r">
+          <div class="game-instructions bg-accent-purple/20 border-l-4 border-accent-purple p-1 mb-3 rounded-r text-sm">
             <p class="text-gray-700">
-              Add numbers on the left side to match the target value of <span class="font-bold text-primary">{{ targetNumber }}</span> on the right side.
+              Add numbers on the left side to match the magic number <span class="font-bold text-primary">{{ targetNumber }}</span> on the right side!
             </p>
           </div>
           
-          <!-- Display game instructions based on game state -->
-          <div class="instruction-text" v-if="gameState.status === 'playing'">
-            <template v-if="!balanceWeightChecked">
-              <div v-if="timeRanOut">
-                <strong class="text-accent-red">Time's up! Enter the correct answer to move on to the next question.</strong>
-              </div>
-              <div v-else class="text-gray-700">
-                What number needs to be added to the right side to make it equal to the left side?
-              </div>
-            </template>
-            <template v-else>
-              <div v-if="answerCorrect" class="text-secondary font-medium">
-                Correct! Great job!
-              </div>
-              <div v-else class="text-accent-red font-medium">
-                Not quite right. Try again!
-              </div>
-            </template>
+          <!-- Compact Balance Scale Container -->
+          <div class="balance-scale-wrapper">
+            <!-- Enhanced Balance Scale Component -->
+            <EnhancedBalanceScale
+              :leftValue="sum"
+              :rightValue="targetNumber"
+              :showFeedback="true"
+              :key="`enhanced-scale-${targetNumber}-${Date.now()}`"
+              class="compact-scale"
+              ref="enhancedBalanceScaleRef"
+            />
           </div>
           
-          <!-- Add a toggle button to switch between original and enhanced balance scale -->
-          <div class="scale-toggle-container" style="margin-bottom: 10px; text-align: center;">
-            <v-btn
-              variant="outlined"
-              color="primary"
-              @click="toggleEnhancedScale"
-              size="small"
-              :prepend-icon="useEnhancedScale ? 'mdi-toggle-switch' : 'mdi-toggle-switch-off'"
-            >
-              {{ useEnhancedScale ? 'Using Enhanced Scale' : 'Using Basic Scale' }}
-            </v-btn>
-            
-            <!-- Add toggle for number input style -->
-            <v-btn
-              variant="outlined"
-              color="primary"
-              @click="toggleEnhancedInput"
-              size="small"
-              class="ml-2"
-              :prepend-icon="useEnhancedInput ? 'mdi-toggle-switch' : 'mdi-toggle-switch-off'"
-            >
-              {{ useEnhancedInput ? 'Using Enhanced Input' : 'Using Basic Input' }}
-            </v-btn>
-          </div>
-          
-          <!-- Balance Scale Component -->
-          <BalanceScale 
-            v-if="!useEnhancedScale"
-            :leftValue="sum" 
-            :rightValue="targetNumber" 
-            :showFeedback="true"
-            :key="`scale-${targetNumber}-${Date.now()}`"
-            class="mb-8"
-            ref="balanceScaleRef"
-          >
-            <template #right-content>
-              {{ targetNumber }}
-            </template>
-            <template #left-content>
-              {{ sum }}
-            </template>
-          </BalanceScale>
-          
-          <!-- Enhanced Balance Scale Component -->
-          <EnhancedBalanceScale
-            v-else
-            :leftValue="sum"
-            :rightValue="targetNumber"
-            :showFeedback="true"
-            :key="`enhanced-scale-${targetNumber}-${Date.now()}`"
-            class="mb-8"
-            ref="enhancedBalanceScaleRef"
-          />
-          
-          <!-- Number Input Section -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <!-- Original Number Input -->
-            <div v-if="!useEnhancedInput" class="left-side p-4 rounded-lg bg-background-secondary">
-              <h3 class="text-lg font-semibold text-gray-800 mb-3">Your Numbers:</h3>
-              <div class="space-y-4">
-                <div v-for="(addend, index) in gameState.addends" :key="index" class="flex items-center">
-                  <NumberInput 
-                    v-model="gameState.addends[index]"
-                    :label="`Number ${index + 1}`"
-                    :min="config.minValue"
-                    :max="config.maxValue"
-                    :showNumberButtons="true"
-                    @update:modelValue="updateAddend(index, $event)"
-                  />
-                </div>
-              </div>
-              <div class="mt-6 py-3 border-t border-gray-200">
-                <div class="flex justify-between items-center">
-                  <span class="text-lg font-bold">Sum:</span>
-                  <span class="text-xl font-bold" :class="{ 'text-secondary': isBalanced, 'text-accent-red': !isBalanced }">
-                    {{ sum }}
-                  </span>
-                </div>
-              </div>
-            </div>
-            
+          <!-- Number Input and Target Section - More compact -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-2 mb-2">
             <!-- Enhanced Number Input -->
-            <div v-else class="left-side">
+            <div class="left-side">
               <EnhancedNumberInput
                 :initialNumbers="gameState.addends"
                 :minValue="config.minValue"
@@ -195,76 +112,53 @@
               />
             </div>
             
-            <div class="right-side p-4 rounded-lg bg-background-secondary">
-              <h3 class="text-lg font-semibold text-gray-800 mb-3">Target:</h3>
-              <div class="bg-primary/10 rounded-lg p-6 flex items-center justify-center">
-                <span class="text-4xl font-bold text-primary">{{ targetNumber }}</span>
+            <div class="right-side p-2 rounded-lg bg-background-secondary">
+              <h3 class="text-sm font-semibold text-gray-800 mb-1">Target:</h3>
+              <div class="bg-primary/10 rounded-lg p-3 flex items-center justify-center">
+                <span class="text-2xl font-bold text-primary">{{ targetNumber }}</span>
               </div>
               
-              <div class="mt-6">
+              <div class="mt-2 relative">
+                <!-- Removing the mascot that appears on target match to avoid duplication -->
+                
                 <button 
                   @click="checkAnswer" 
-                  class="w-full py-3 bg-primary text-white font-medium rounded-lg hover:bg-primary/90 transition duration-300"
+                  class="w-full py-1.5 font-medium rounded-lg transition duration-300 text-xs"
+                  :class="{ 
+                    'bg-primary text-white hover:bg-primary/90': !(sum === targetNumber && !gameState.isComplete), 
+                    'bg-secondary text-white hover:bg-secondary/90 animate-pulse': sum === targetNumber && !gameState.isComplete,
+                    'cursor-not-allowed opacity-70': gameState.isComplete
+                  }"
                   :disabled="gameState.isComplete"
                 >
-                  {{ gameState.isComplete ? 'Correct! Click Next' : 'Check Answer' }}
-                </button>
-              </div>
-              
-              <!-- Time-out specific message with mascot -->
-              <div v-if="timeRanOut" class="mt-4 bg-accent-yellow/20 border-l-4 border-accent-yellow p-4 rounded-r relative">
-                <div class="absolute -top-12 -left-8">
-                  <BalancerBuddy 
-                    message="Oh no! Time's up, but you can still solve this!" 
-                    expression="surprised"
-                    @messageDismissed="handleMessageDismissed"
-                  />
-                </div>
-                <p class="text-gray-700 ml-16">
-                  <strong>Time's up!</strong> Enter the correct answer to move on to the next question.
-                </p>
-              </div>
-              
-              <!-- Regular feedback messages with mascot (only show if not timed out) -->
-              <div v-else-if="gameState.lastAttemptCorrect !== null" class="mt-4">
-                <div v-if="gameState.lastAttemptCorrect" class="bg-secondary/20 border-l-4 border-secondary p-4 rounded-r relative">
-                  <div class="absolute -top-12 -left-8">
-                    <BalancerBuddy 
-                      message="Amazing work! That's perfectly balanced!" 
-                      expression="happy"
-                      @messageDismissed="handleMessageDismissed"
-                    />
-                  </div>
-                  <p class="text-gray-700 ml-16">
-                    Great job! The scale is balanced.
-                  </p>
-                </div>
-                <div v-else class="bg-accent-red/20 border-l-4 border-accent-red p-4 rounded-r relative">
-                  <div class="absolute -top-12 -left-8">
-                    <BalancerBuddy 
-                      message="Almost there! Try a different combination." 
-                      expression="thinking"
-                      @messageDismissed="handleMessageDismissed"
-                    />
-                  </div>
-                  <p class="text-gray-700 ml-16">
-                    Not quite right. Try again!
-                  </p>
-                </div>
-              </div>
-              
-              <div v-if="gameState.isComplete" class="mt-4">
-                <button 
-                  @click="nextProblem" 
-                  class="w-full py-3 bg-secondary text-white font-medium rounded-lg hover:bg-secondary/90 transition duration-300"
-                >
-                  Next Problem
+                  {{ gameState.isComplete ? 'Hooray! Click Next' : 'Check Answer' }}
                 </button>
               </div>
             </div>
           </div>
           
-          <!-- Star Reward Overlay - show when problem is completed correctly -->
+          <!-- Next Problem Button at the Bottom for Space Efficiency -->
+          <div v-if="gameState.isComplete" class="text-center">
+            <button 
+              @click="nextProblem" 
+              class="next-button"
+            >
+              Next
+            </button>
+          </div>
+
+          <!-- Update the feedback mascot to show hint about matching sum -->
+          <div class="feedback-mascot-container">
+            <EnhancedMascot
+              :message="sum === targetNumber && !gameState.isComplete && !timeRanOut && gameState.lastAttemptCorrect === null ? 'Click Check Answer!' : mascotFeedback.message"
+              :state="sum === targetNumber && !gameState.isComplete && !timeRanOut && gameState.lastAttemptCorrect === null ? 'hint' : mascotFeedback.state"
+              :animation="sum === targetNumber && !gameState.isComplete && !timeRanOut && gameState.lastAttemptCorrect === null ? 'bounce' : mascotFeedback.animation"
+              position="bottom-right"
+              @messageDismissed="handleMessageDismissed"
+            />
+          </div>
+
+          <!-- Star Reward Overlay -->
           <div 
             v-if="showStarReward && gameState.isComplete" 
             class="star-reward-overlay"
@@ -282,8 +176,8 @@
           </div>
         </div>
         
-        <div class="flex justify-center mt-6">
-          <router-link to="/" class="px-4 py-2 bg-background-secondary text-primary rounded-lg border border-background-secondary hover:bg-background-secondary/80">
+        <div v-if="gameStarted" class="flex justify-center mt-3">
+          <router-link to="/" class="back-link">
             Back to Home
           </router-link>
         </div>
@@ -294,11 +188,13 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, nextTick, onUnmounted } from 'vue';
+// Keep both simple and enhanced component imports for backward compatibility
+// though we now only render the enhanced versions in the UI
 import BalanceScale from '../components/BalanceScale.vue';
 import EnhancedBalanceScale from '../components/EnhancedBalanceScale.vue';
 import NumberInput from '../components/NumberInput.vue';
 import EnhancedNumberInput from '../components/EnhancedNumberInput.vue';
-import BalancerBuddy from '../components/BalancerBuddy.vue';
+import EnhancedMascot from '../components/EnhancedMascot.vue';
 import StarReward from '../components/StarReward.vue';
 import { useGameStore } from '../stores/gameStore';
 import soundService from '../services/soundService';
@@ -309,6 +205,30 @@ import configService from '../services/configService';
 
 // Define constants
 const FEEDBACK_DELAY = 1500; // 1.5 seconds delay for feedback
+
+// Random style generator for floating elements
+const getRandomStyle = () => {
+  const size = Math.floor(Math.random() * 30) + 20; // 20-50px
+  const top = Math.floor(Math.random() * 80) + 10; // 10-90%
+  const left = Math.floor(Math.random() * 80) + 10; // 10-90%
+  const animationDuration = Math.floor(Math.random() * 20) + 10; // 10-30s
+  const delay = Math.floor(Math.random() * 10); // 0-10s
+  
+  return {
+    width: `${size}px`,
+    height: `${size}px`,
+    top: `${top}%`,
+    left: `${left}%`,
+    animationDuration: `${animationDuration}s`,
+    animationDelay: `${delay}s`
+  };
+};
+
+// Random math symbol generator
+const getRandomMathSymbol = () => {
+  const symbols = ['+', '=', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
+  return symbols[Math.floor(Math.random() * symbols.length)];
+};
 
 const gameStore = useGameStore();
 const authStore = useAuthStore();
@@ -374,14 +294,21 @@ const earnedStars = ref(0);
 const starRewardTitle = ref('Great job!');
 
 // Add a new variable to control which scale to use
-const useEnhancedScale = ref(false);
+const useEnhancedScale = ref(true);
 
 // Add a new variable to control which input style to use
-const useEnhancedInput = ref(false);
+const useEnhancedInput = ref(true);
 
 // Refs for the balance scale components
 const balanceScaleRef = ref<InstanceType<typeof BalanceScale> | null>(null);
 const enhancedBalanceScaleRef = ref<InstanceType<typeof EnhancedBalanceScale> | null>(null);
+
+// Add reactive data for mascot feedback
+const mascotFeedback = ref({
+  message: '',
+  state: 'idle',
+  animation: ''
+});
 
 onMounted(async () => {
   // Initialize the game when the component mounts to ensure a valid target number is set
@@ -464,9 +391,9 @@ async function startGameWithProgress(progress: UserProgress) {
   // Generate a new target but keep progress data
   const newTarget = gameStore.generateTargetNumber();
   
-  // Create a state with the user's progress
+  // Create a state with the user's progress - explicitly use 0s for addends
   gameState.value = {
-    addends: Array(config.value.maxAddends).fill(0),
+    addends: Array(config.value.maxAddends).fill(0), // Always explicitly fill with 0
     attempts: progress.attempts,
     successes: progress.successes,
     currentLevel: progress.currentLevel,
@@ -517,14 +444,14 @@ async function startGame() {
   startCountdownTimer();
 }
 
+// Function to update a single addend - kept for backward compatibility
 function updateAddend(index: number, value: number) {
-  console.log(`Updating addend ${index} from ${gameState.value.addends[index]} to ${value}`);
-  gameStore.setAddend(index, value);
-  
-  // Log the resulting sum
-  setTimeout(() => {
-    console.log(`After update - Sum: ${sum.value}, Target: ${targetNumber.value}, isBalanced: ${isBalanced.value}`);
-  }, 0);
+  console.log(`Using simplified updateAddend that calls updateAddends`);
+  // Create a new array with the updated value
+  const updatedAddends = [...gameState.value.addends];
+  updatedAddends[index] = value;
+  // Call the more general updateAddends function
+  updateAddends(updatedAddends);
 }
 
 async function checkAnswer() {
@@ -560,11 +487,25 @@ async function checkAnswer() {
     // Only play success sound if not recovering from a timeout
     if (!timeRanOut.value) {
       playSound('correct');
+      
+      // Show success mascot feedback
+      mascotFeedback.value = {
+        message: getRandomSuccessMessage(),
+        state: 'happy',
+        animation: 'bounce'
+      };
     }
   } else {
     // Only play incorrect sound if not a timeout scenario
     if (!timeRanOut.value) {
       playSound('incorrect');
+      
+      // Show incorrect mascot feedback
+      mascotFeedback.value = {
+        message: getRandomIncorrectMessage(sumValue, targetValue),
+        state: 'thinking',
+        animation: ''
+      };
     }
     // Ensure the lastAttemptCorrect is set to false for incorrect answers
     gameState.value.lastAttemptCorrect = false;
@@ -625,7 +566,10 @@ async function checkAnswer() {
 
   // If the answer is correct, calculate stars earned based on time and accuracy
   if (finalResult) {
-    calculateStarReward(timeSpent.value);
+    // Delay star reward to allow mascot to show feedback first
+    setTimeout(() => {
+      calculateStarReward(timeSpent.value);
+    }, 1500); // 1.5 seconds delay
   }
 }
 
@@ -706,7 +650,7 @@ async function nextProblem() {
   // Explicit reset of addends to ensure they're all 0
   // Create a completely fresh addends array
   const maxAddends = config.value.maxAddends;
-  const freshAddends = Array(maxAddends).fill(0);
+  const freshAddends = Array(maxAddends).fill(0); // Ensure we use 0, not default values
   
   // Update the game state with these fresh addends
   gameState.value.addends = freshAddends;
@@ -723,12 +667,17 @@ async function nextProblem() {
   // Start the countdown timer for the next problem
   startCountdownTimer();
   
-  // Reset the appropriate balance scale component
-  if (!useEnhancedScale.value && balanceScaleRef.value) {
-    balanceScaleRef.value.resetScale();
-  } else if (useEnhancedScale.value && enhancedBalanceScaleRef.value) {
+  // Reset the balance scale component
+  if (enhancedBalanceScaleRef.value) {
     enhancedBalanceScaleRef.value.resetScale();
   }
+
+  // Clear mascot feedback
+  mascotFeedback.value = {
+    message: '',
+    state: 'idle',
+    animation: ''
+  };
 }
 
 // Function to toggle mute
@@ -826,6 +775,14 @@ function playSound(sound: SoundType) {
 function closeStarReward() {
   // Hide star reward overlay
   showStarReward.value = false;
+  
+  // Clear mascot feedback when star reward is closed
+  mascotFeedback.value = {
+    message: '',
+    state: 'idle',
+    animation: ''
+  };
+  
   // Play a click sound for feedback
   playSound('click');
   console.log('Star reward overlay closed, waiting for Next Problem button click');
@@ -836,50 +793,351 @@ function handleMessageDismissed() {
   console.log('Message dismissed event handled');
 }
 
-// Add function to toggle the enhanced scale
+// Add function to toggle the enhanced scale - kept for backward compatibility
 function toggleEnhancedScale() {
-  useEnhancedScale.value = !useEnhancedScale.value;
-  // Reset the appropriate balance scale component if we have a ref to it
-  if (!useEnhancedScale.value && balanceScaleRef.value) {
-    balanceScaleRef.value.resetScale();
-  } else if (useEnhancedScale.value && enhancedBalanceScaleRef.value) {
-    enhancedBalanceScaleRef.value.resetScale();
-  }
+  // No longer toggles, always uses enhanced scale
+  console.log('Enhanced scale toggle requested, but now we always use the enhanced scale');
   playSound('click');
 }
 
-// Add function to toggle the enhanced input
+// Add function to toggle the enhanced input - kept for backward compatibility
 function toggleEnhancedInput() {
-  useEnhancedInput.value = !useEnhancedInput.value;
+  // No longer toggles, always uses enhanced input
+  console.log('Enhanced input toggle requested, but now we always use the enhanced input');
   playSound('click');
 }
 
 // Add a function to update all addends at once (for EnhancedNumberInput)
 function updateAddends(newAddends: number[]) {
+  console.log('Updating addends with:', newAddends);
+  
   // Make sure we don't exceed the maximum number of addends
   if (newAddends.length <= config.value.maxAddends) {
-    // Update each addend
-    newAddends.forEach((value, index) => {
-      if (index < gameState.value.addends.length) {
+    try {
+      // Create a new array with the correct size to match newAddends
+      const updatedAddends = [...newAddends];
+      
+      // Update the gameState.addends directly with the new array
+      gameState.value.addends = updatedAddends;
+      
+      // Explicitly update gameStore to ensure everything is in sync
+      updatedAddends.forEach((value, index) => {
         gameStore.setAddend(index, value);
-      }
-    });
-    
-    // If the array sizes are different, resize the gameState.addends array
-    if (newAddends.length > gameState.value.addends.length) {
-      // Add new addends
-      for (let i = gameState.value.addends.length; i < newAddends.length; i++) {
-        gameStore.setAddend(i, newAddends[i]);
-      }
-    } else if (newAddends.length < gameState.value.addends.length) {
-      // Remove excess addends by setting a new array
-      gameState.value.addends = [...newAddends];
+      });
+      
+      console.log('Updated gameState.addends:', gameState.value.addends);
+    } catch (error) {
+      console.error('Error updating addends:', error);
     }
+  } else {
+    console.warn('Tried to add too many addends. Max allowed:', config.value.maxAddends);
+  }
+}
+
+// Helper functions to generate random feedback messages
+function getRandomSuccessMessage() {
+  const messages = [
+    "Woohoo! That's right!",
+    "Amazing job! Perfect balance!",
+    "You're a math wizard!",
+    "Super duper job! The numbers match!",
+    "Fantastic! You found the right numbers!",
+    "Awesome! Let's see your stars!"
+  ];
+  return messages[Math.floor(Math.random() * messages.length)];
+}
+
+function getRandomIncorrectMessage(actual: number, target: number) {
+  const diff = actual - target;
+  
+  if (diff > 0) {
+    const messages = [
+      `Oops! Your number ${actual} is bigger than ${target}.`,
+      `Try again! Your answer is a bit too big.`,
+      `The left side is too heavy! Try smaller numbers.`
+    ];
+    return messages[Math.floor(Math.random() * messages.length)];
+  } else {
+    const messages = [
+      `Almost there! Your number ${actual} is smaller than ${target}.`,
+      `Try again! Your answer is a bit too small.`,
+      `The right side is heavier! Try bigger numbers.`
+    ];
+    return messages[Math.floor(Math.random() * messages.length)];
   }
 }
 </script>
 
 <style scoped>
+/* Game container with background */
+.game-container-bg {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  background: linear-gradient(135deg, #F0EBFF 0%, #E6F7FF 100%);
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Floating background elements */
+.floating-elements {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.floating-element {
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  font-weight: bold;
+  color: white;
+  animation: float linear infinite;
+  opacity: 0.6;
+}
+
+.element-1, .element-5, .element-9 { background-color: #4A90E2; }
+.element-2, .element-6, .element-10 { background-color: #FFD166; }
+.element-3, .element-7, .element-11 { background-color: #06D6A0; }
+.element-4, .element-8, .element-12 { background-color: #EF476F; }
+
+@keyframes float {
+  0% {
+    transform: translateY(100vh) rotate(0deg);
+  }
+  100% {
+    transform: translateY(-100px) rotate(360deg);
+  }
+}
+
+/* Game title */
+.game-title {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #4A90E2;
+  margin: 0 0 1rem 0;
+  text-align: center;
+  background: linear-gradient(90deg, #4A90E2, #9370DB);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: title-bounce 2s ease-in-out infinite alternate;
+}
+
+@keyframes title-bounce {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-5px); }
+}
+
+/* Main content card */
+.content-card {
+  background-color: white;
+  border-radius: 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1), 0 1px 8px rgba(0, 0, 0, 0.05);
+  padding: 30px;
+  position: relative;
+  z-index: 2;
+}
+
+/* Welcome screen styles */
+.welcome-screen {
+  text-align: center;
+  position: relative;
+  padding: 20px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.mascot-container {
+  position: relative;
+  margin: 0 auto 40px;
+  height: 180px;
+  width: 400px;
+}
+
+.welcome-heading {
+  font-size: 1.75rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 12px;
+}
+
+.welcome-text {
+  color: #666;
+  margin-bottom: 24px;
+  max-width: 600px;
+  line-height: 1.5;
+}
+
+.start-button {
+  padding: 12px 30px;
+  background-color: #FFD166;
+  color: #333;
+  font-weight: bold;
+  border-radius: 12px;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.start-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 7px 0 rgba(0, 0, 0, 0.1);
+  background-color: #FFBE33;
+}
+
+.start-button:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.1);
+}
+
+.start-button::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: shine 3s infinite;
+}
+
+@keyframes shine {
+  0% { left: -100%; }
+  20% { left: 100%; }
+  100% { left: 100%; }
+}
+
+.back-link-container {
+  margin-top: 30px;
+}
+
+.back-link {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: #4A90E2;
+  color: white;
+  border: 1px solid #4A90E2;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+
+.back-link:hover {
+  background-color: #3A80D2;
+  color: white;
+}
+
+/* Game interface styles - keep original styles with some adjustments */
+.game-interface {
+  /* Keep your existing game container styles */
+}
+
+.game-container {
+  max-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Center the card in the viewport */
+.min-h-screen {
+  min-height: 100vh;
+}
+
+.balance-scale-wrapper {
+  flex-shrink: 1;
+  overflow: visible; /* Changed from hidden to ensure visibility */
+  margin-bottom: 0.5rem; /* Reduced from 1.5rem to close the gap */
+  margin-top: 1rem; /* Added to create more space above */
+  padding: 1.5rem 0; /* Added vertical padding to ensure space for tilt */
+  min-height: 200px; /* Added minimum height to reserve space */
+  position: relative; /* Ensure proper stacking context */
+}
+
+/* Scale the balance scales to fit the viewport */
+:deep(.compact-scale) {
+  transform-origin: center center;
+  transform: scale(1); /* Changed from 0.85 to 1 since we've made components smaller */
+  margin-top: 0; /* Adjusted from -10px */
+  margin-bottom: 0; /* Adjusted from -10px */
+}
+
+:deep(.scale-base) {
+  height: 180px !important; /* Matching new height in BalanceScale.vue */
+}
+
+:deep(.balance-scale-container) {
+  height: 180px !important; /* Matching new height in EnhancedBalanceScale.vue */
+}
+
+/* Make the enhanced number input more compact */
+:deep(.number-controls) {
+  padding: 0.75rem !important;
+}
+
+:deep(.controls-title) {
+  margin-bottom: 0.5rem !important;
+}
+
+:deep(.number-item) {
+  gap: 0.25rem !important;
+}
+
+:deep(.number-input-container) {
+  margin-bottom: 0.5rem !important;
+}
+
+/* For smaller screens - further optimize space */
+@media (max-width: 768px) {
+  :deep(.compact-scale) {
+    transform: scale(0.9); /* Adjusted from 0.75 */
+    margin-top: -15px;
+    margin-bottom: -15px;
+  }
+  
+  :deep(.number-controls) {
+    padding: 0.75rem !important;
+  }
+  
+  :deep(.balance-scale-container) {
+    height: 180px !important; /* Keeping consistent */
+  }
+  
+  :deep(.scale-base) {
+    height: 180px !important; /* Keeping consistent */
+  }
+  
+  .mascot-container {
+    height: 150px;
+  }
+  
+  .game-title {
+    font-size: 1.75rem;
+  }
+  
+  .welcome-heading {
+    font-size: 1.5rem;
+  }
+}
+
 .star-reward-overlay {
   position: fixed;
   top: 0;
@@ -912,5 +1170,144 @@ function updateAddends(newAddends: number[]) {
     transform: scale(1);
     opacity: 1;
   }
+}
+
+/* Feedback mascot positioning */
+.feedback-mascot-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 60; /* Increase z-index to be above other elements but below the star overlay */
+  transition: all 0.3s ease;
+}
+
+/* When mascot has a message, make it more prominent */
+.feedback-mascot-container:has(.speech-bubble) {
+  transform: scale(1.1);
+  filter: drop-shadow(0 0 10px rgba(74, 144, 226, 0.3));
+}
+
+@media (max-width: 768px) {
+  .feedback-mascot-container {
+    bottom: 10px;
+    right: 10px;
+    transform: scale(0.8);
+    transform-origin: bottom right;
+  }
+  
+  /* Adjust scale for mobile when message is showing */
+  .feedback-mascot-container:has(.speech-bubble) {
+    transform: scale(0.9);
+  }
+}
+
+/* Next button styling to match Back to Home */
+.next-button {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: #9370DB;
+  color: white;
+  border: 1px solid #9370DB;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: medium;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.next-button:hover {
+  background-color: #7A5DC7;
+}
+
+/* Add these new styles for the badges */
+.level-badge, .score-badge, .time-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: white;
+  border-radius: 12px;
+  padding: 4px 12px;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+  border: 2px solid;
+  min-width: 80px;
+}
+
+.level-badge {
+  border-color: #4A90E2;
+  animation: float-gentle 3s ease-in-out infinite alternate;
+}
+
+.score-badge {
+  border-color: #9370DB;
+  animation: float-gentle 3s ease-in-out infinite alternate;
+}
+
+.time-badge {
+  border-color: #06D6A0;
+  animation: float-gentle 3s ease-in-out infinite alternate;
+}
+
+.level-label, .score-label, .time-label {
+  font-size: 0.7rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: #666;
+  margin-bottom: 2px;
+}
+
+.level-number, .score-number, .time-number {
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+.level-number {
+  color: #4A90E2;
+}
+
+.score-number {
+  color: #9370DB;
+}
+
+.time-number {
+  color: #06D6A0;
+}
+
+.time-number.hurry-up {
+  color: #EF476F;
+  animation: pulse 1s infinite;
+}
+
+.sound-button {
+  background-color: white;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid #FFD166;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.sound-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.sound-button:hover {
+  transform: scale(1.1);
+  background-color: #FFD166;
+}
+
+@keyframes float-gentle {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-3px); }
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
 }
 </style> 
