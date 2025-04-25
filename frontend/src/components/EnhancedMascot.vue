@@ -1,5 +1,10 @@
 <template>
-  <div class="mascot-container" :class="[state, position]">
+  <div 
+    class="mascot-container" 
+    :class="[state, position, { 'draggable': isMobile, 'dragging': isDragging }]"
+    :style="draggableStyle"
+    ref="mascotContainerRef"
+  >
     <Transition name="bubble">
       <div class="speech-bubble" v-if="message && showMessage" @click="handleBubbleClick">
         <p class="message-text">{{ message }}</p>
@@ -12,6 +17,9 @@
       @click="handleClick"
       @mouseenter="handleMouseEnter"
       @mouseleave="handleMouseLeave"
+      @touchstart="handleTouchStart"
+      @touchmove="handleTouchMove"
+      @touchend="handleTouchEnd"
     >
       <div class="mascot-body">
         <div class="owl-body"></div>
@@ -33,6 +41,9 @@
           <div class="foot right"></div>
         </div>
         <div v-if="state === 'celebrating'" class="graduation-cap"></div>
+      </div>
+      <div v-if="isMobile" class="drag-handle" aria-hidden="true">
+        <span>Drag me</span>
       </div>
     </div>
   </div>
@@ -94,6 +105,9 @@ const handleBubbleClick = (e: MouseEvent) => {
 
 // Handle click on the mascot itself
 const handleClick = () => {
+  // Don't trigger click when dragging on mobile
+  if (isDragging.value) return;
+  
   // If there's a message and it's not showing, make it visible again
   if (props.message && !showMessage.value) {
     showMessage.value = true;
@@ -115,6 +129,85 @@ const handleMouseLeave = () => {
   isHovered.value = false;
 };
 
+// Mobile drag functionality
+const isMobile = ref(false);
+const isDragging = ref(false);
+const dragOffset = ref({ x: 0, y: 0 });
+const position = ref({ x: null, y: null });
+const mascotContainerRef = ref(null);
+
+// Computed style for draggable positioning
+const draggableStyle = computed(() => {
+  if (position.value.x !== null && position.value.y !== null) {
+    return {
+      position: 'fixed',
+      left: `${position.value.x}px`,
+      top: `${position.value.y}px`,
+      transform: 'none'
+    };
+  }
+  return {};
+});
+
+// Load saved position from localStorage
+const loadSavedPosition = () => {
+  const savedPosition = localStorage.getItem('mascotPosition');
+  if (savedPosition) {
+    try {
+      position.value = JSON.parse(savedPosition);
+    } catch (e) {
+      console.error('Failed to parse saved mascot position:', e);
+    }
+  }
+};
+
+// Save position to localStorage
+const savePosition = () => {
+  localStorage.setItem('mascotPosition', JSON.stringify(position.value));
+};
+
+// Touch event handlers
+const handleTouchStart = (e: TouchEvent) => {
+  if (!isMobile.value) return;
+  
+  isDragging.value = true;
+  const touch = e.touches[0];
+  const rect = (mascotContainerRef.value as HTMLElement).getBoundingClientRect();
+  
+  // Calculate offset from the touch position to the top-left corner of the mascot
+  dragOffset.value = {
+    x: touch.clientX - rect.left,
+    y: touch.clientY - rect.top
+  };
+};
+
+const handleTouchMove = (e: TouchEvent) => {
+  if (!isDragging.value) return;
+  
+  // Prevent default to stop scrolling when dragging
+  e.preventDefault();
+  
+  const touch = e.touches[0];
+  
+  // Calculate new position based on touch position and drag offset
+  position.value = {
+    x: touch.clientX - dragOffset.value.x,
+    y: touch.clientY - dragOffset.value.y
+  };
+};
+
+const handleTouchEnd = () => {
+  if (!isDragging.value) return;
+  
+  isDragging.value = false;
+  savePosition();
+};
+
+// Check for mobile device
+const checkMobile = () => {
+  isMobile.value = window.innerWidth <= 768;
+};
+
 // Watch for message changes to reset bubble visibility
 watch(() => props.message, (newValue, oldValue) => {
   console.log(`Message changed from "${oldValue}" to "${newValue}"`);
@@ -125,6 +218,15 @@ watch(() => props.message, (newValue, oldValue) => {
 
 onMounted(() => {
   window.addEventListener('mousemove', handleMouseMove);
+  window.addEventListener('resize', checkMobile);
+  
+  // Check if we're on a mobile device
+  checkMobile();
+  
+  // Load saved position if on mobile
+  if (isMobile.value) {
+    loadSavedPosition();
+  }
   
   // Ensure message is visible on mount if one exists
   if (props.message) {
@@ -134,6 +236,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('mousemove', handleMouseMove);
+  window.removeEventListener('resize', checkMobile);
 });
 </script>
 
@@ -145,6 +248,18 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center;
   transition: all 0.3s ease;
+}
+
+/* When mascot is draggable (mobile), add specific styles */
+.mascot-container.draggable {
+  position: fixed;
+  transition: none; /* Disable transition for smoother dragging */
+}
+
+/* Visual indication when dragging */
+.mascot-container.dragging {
+  opacity: 0.8;
+  filter: brightness(1.2);
 }
 
 .bottom-right {
@@ -197,10 +312,47 @@ onUnmounted(() => {
   height: 120px;
   transition: all 0.3s ease;
   cursor: pointer;
+  position: relative;
 }
 
 .mascot.hovered {
   transform: scale(1.1);
+}
+
+/* Drag handle that appears on mobile */
+.drag-handle {
+  position: absolute;
+  top: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 10px;
+  padding: 2px 6px;
+  font-size: 10px;
+  color: #666;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  opacity: 0.8;
+  pointer-events: none; /* Ensures it doesn't interfere with touch events */
+  animation: fadeInOut 3s infinite;
+}
+
+@keyframes fadeInOut {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* Additional styles for mobile */
+@media (max-width: 768px) {
+  .mascot-container.draggable .mascot {
+    /* Add a subtle pulse effect to hint it's draggable */
+    animation: pulse 2s infinite;
+  }
+  
+  @keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+  }
 }
 
 .mascot-body {
