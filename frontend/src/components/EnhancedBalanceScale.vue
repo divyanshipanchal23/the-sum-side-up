@@ -2,6 +2,8 @@
   <div class="balance-scale-container">
     <!-- Fulcrum and stand with more dimension -->
     <div class="fulcrum">
+      <!-- Center vertical beam (purple) -->
+      <div class="vertical-beam"></div>
       <div class="stand-top"></div>
       <div class="stand"></div>
       <div class="stand-base"></div>
@@ -15,6 +17,7 @@
     >
       <!-- Beam connection points for better visualization -->
       <div class="connection-point left-connection"></div>
+      <div class="connection-point center-connection"></div>
       <div class="connection-point right-connection"></div>
       
       <!-- Left pan with 3D effect -->
@@ -22,19 +25,8 @@
         <div class="pan-string"></div>
         <div class="pan" :class="{ 'weighted': leftWeight > 0 }">
           <div class="pan-inner">
-            <div class="pan-content">
-              <TransitionGroup name="number-block">
-                <div 
-                  v-for="(block, index) in leftBlocks" 
-                  :key="`left-${index}`" 
-                  class="number-block"
-                  :style="getBlockStyle(block)"
-                >
-                  {{ block }}
-                </div>
-              </TransitionGroup>
-              <div v-if="!leftBlocks.length && leftWeight > 0" class="sum-value">{{ leftWeight }}</div>
-            </div>
+            <!-- Display number directly inside pan -->
+            <div class="pan-number">{{ leftWeight }}</div>
           </div>
         </div>
       </div>
@@ -44,19 +36,8 @@
         <div class="pan-string"></div>
         <div class="pan" :class="{ 'weighted': rightWeight > 0 }">
           <div class="pan-inner">
-            <div class="pan-content">
-              <TransitionGroup name="number-block">
-                <div 
-                  v-for="(block, index) in rightBlocks" 
-                  :key="`right-${index}`" 
-                  class="number-block target-block"
-                  :style="getBlockStyle(block)"
-                >
-                  {{ block }}
-                </div>
-              </TransitionGroup>
-              <div v-if="!rightBlocks.length && rightWeight > 0" class="sum-value target-value">{{ rightWeight }}</div>
-            </div>
+            <!-- Display number directly inside pan -->
+            <div class="pan-number">{{ rightWeight }}</div>
           </div>
         </div>
       </div>
@@ -68,12 +49,6 @@
         <div class="indicator-text">Balanced!</div>
       </div>
     </Transition>
-    
-    <!-- Weight indicators -->
-    <div class="weight-indicators">
-      <div class="weight left">Left: {{ leftWeight }}</div>
-      <div class="weight right">Right: {{ rightWeight }}</div>
-    </div>
   </div>
 </template>
 
@@ -158,40 +133,6 @@ const rightPanStyle = computed(() => ({
   transition: 'transform 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55)'
 }));
 
-// Generate a unique color based on the number value
-const getBlockStyle = (value: number) => {
-  const colors = [
-    '#4A90E2', // blue
-    '#FF8A65', // coral
-    '#FFD166', // yellow
-    '#06D6A0', // mint
-    '#BDADEA', // lavender
-    '#FF5C8D', // pink
-    '#46CDCF', // teal
-    '#FFA41B', // orange
-    '#5D5FEF', // indigo
-    '#00B8A9', // turquoise
-  ];
-  
-  const colorIndex = Math.abs(Math.floor(value)) % colors.length;
-  const size = Math.min(50, Math.max(30, 30 + Math.abs(value) * 2)); // Size based on value
-  
-  return {
-    backgroundColor: colors[colorIndex],
-    width: `${size}px`,
-    height: `${size}px`,
-  };
-};
-
-// Emit events when balance state changes
-watch(isBalanced, (newValue) => {
-  if (newValue) {
-    emit('balanced');
-  } else {
-    emit('unbalanced');
-  }
-});
-
 // Function to reset the scale (can be called from parent)
 const resetScale = () => {
   console.log('Enhanced balance scale reset');
@@ -230,6 +171,17 @@ onMounted(() => {
   z-index: 1;
 }
 
+/* Vertical beam styling */
+.vertical-beam {
+  position: absolute;
+  width: 20px;
+  height: 280px; /* Increased height to ensure full connection */
+  background-color: #9370DB; /* Purple */
+  border-radius: 5px 5px 0 0; /* Round top corners only */
+  bottom: 15px; /* Position to connect with stand-base */
+  z-index: 3; /* Ensure it's above the stand but below the beam */
+}
+
 .stand-top {
   width: 30px;
   height: 10px;
@@ -241,16 +193,14 @@ onMounted(() => {
 
 .stand {
   width: 20px;
-  height: 180px; /* Increased from 120px to make it taller */
-  background: linear-gradient(90deg, #7A5DC7 0%, #9370DB 50%, #7A5DC7 100%);
-  border-radius: 5px;
-  box-shadow: -3px 0 6px rgba(0, 0, 0, 0.1), 3px 0 6px rgba(0, 0, 0, 0.1);
+  height: 180px;
+  background-color: transparent; /* Make invisible as we're using vertical-beam instead */
 }
 
 .stand-base {
   width: 60px;
   height: 15px;
-  background: linear-gradient(90deg, #7A5DC7 0%, #9370DB 50%, #7A5DC7 100%);
+  background-color: #9370DB;
   border-radius: 5px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
 }
@@ -258,11 +208,11 @@ onMounted(() => {
 /* Improved beam styling */
 .beam {
   position: absolute;
-  width: 400px; /* Increased from 300px for more spacing */
+  width: 600px; /* Increased width to match reference image */
   height: 12px;
-  background: linear-gradient(90deg, #5B86E5 0%, #7AA0F7 50%, #5B86E5 100%);
+  background: linear-gradient(90deg, #4A90E2 0%, #6FA9F7 50%, #4A90E2 100%);
   border-radius: 6px;
-  top: 80px; /* Lowered to connect with the stand */
+  top: 80px; /* Positioned to connect with vertical beam */
   transform-origin: center;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   z-index: 2;
@@ -273,7 +223,7 @@ onMounted(() => {
   position: absolute;
   width: 8px;
   height: 8px;
-  background-color: #5B86E5;
+  background-color: #4A90E2;
   border: 1px solid #3A75D4;
   border-radius: 50%;
   bottom: -4px;
@@ -281,11 +231,16 @@ onMounted(() => {
 }
 
 .left-connection {
-  left: 80px; /* Moved further out from 50px */
+  left: 150px;
+}
+
+.center-connection {
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .right-connection {
-  right: 80px; /* Moved further out from 50px */
+  right: 150px;
 }
 
 .beam.balanced {
@@ -298,120 +253,63 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  transform-origin: top center; /* Better rotation center */
+  transform-origin: top center;
 }
 
 .pan-container.left {
-  left: 80px; /* Moved to match connection point */
-  top: 12px; /* Start exactly at the beam bottom */
+  left: 150px;
+  top: 12px;
 }
 
 .pan-container.right {
-  right: 80px; /* Moved to match connection point */
-  top: 12px; /* Start exactly at the beam bottom */
+  right: 150px;
+  top: 12px;
 }
 
 /* Improved string styling */
 .pan-string {
   width: 2px;
-  height: 50px;
+  height: 70px;
   background-color: #A0AEC0;
   box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
 }
 
 /* Fixed pan shape to be circular */
 .pan {
-  width: 80px;
-  height: 80px; /* Equal height and width for circle */
-  background: linear-gradient(180deg, #7AA0F7 0%, #5B86E5 100%);
-  border-radius: 50%; /* Perfect circle */
+  width: 90px;
+  height: 90px;
+  background: linear-gradient(180deg, #4A90E2 0%, #6FA9F7 100%);
+  border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   transition: all 0.3s ease;
-  transform: perspective(500px) rotateX(5deg); /* Less extreme tilt */
 }
 
 .pan-inner {
-  width: 70px;
-  height: 70px; /* Equal height and width for circle */
-  background: linear-gradient(180deg, #E2E8F0 0%, #CBD5E0 100%);
-  border-radius: 50%; /* Perfect circle */
+  width: 80px;
+  height: 80px;
+  background: #E2E8F0;
+  border-radius: 50%;
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.pan-number {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #4A90E2;
 }
 
 .pan.weighted {
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
-  transform: perspective(500px) rotateX(0deg);
-}
-
-/* Fixed content placement to avoid overlaps */
-.pan-content {
-  position: absolute;
-  top: -40px; /* Raised above the pan */
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: center;
-  gap: 5px;
-  width: 80px; /* Match pan width */
-  height: 40px; /* Fixed height for consistency */
-}
-
-.sum-value {
-  font-size: 1.75rem;
-  font-weight: bold;
-  color: #4A90E2;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  background-color: rgba(255, 255, 255, 0.7); /* Added background for readability */
-  padding: 2px 8px;
-  border-radius: 10px;
-}
-
-.target-value {
-  color: #9370DB;
-}
-
-.number-block {
-  width: 36px;
-  height: 36px;
-  background-color: #4A90E2;
-  color: white;
-  border-radius: 8px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-weight: bold;
-  font-size: 1.1rem;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
-  transition: all 0.3s ease;
-}
-
-.target-block {
-  background-color: #9370DB;
-}
-
-.number-block-enter-active,
-.number-block-leave-active {
-  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
-
-.number-block-enter-from {
-  opacity: 0;
-  transform: translateY(-30px) scale(0.5);
-}
-
-.number-block-leave-to {
-  opacity: 0;
-  transform: translateY(30px) scale(0.5);
 }
 
 .balance-indicator {
   position: absolute;
-  top: 50px;
+  top: 35px; /* Adjusted position to match reference image */
   background-color: #06D6A0;
   color: white;
   padding: 0.75rem 1.5rem;
@@ -420,31 +318,6 @@ onMounted(() => {
   font-size: 1.2rem;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   z-index: 10;
-}
-
-.weight-indicators {
-  position: absolute;
-  bottom: 10px;
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  padding: 0 50px;
-}
-
-.weight {
-  background-color: rgba(255, 255, 255, 0.8);
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  font-weight: bold;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.weight.left {
-  color: #5B86E5;
-}
-
-.weight.right {
-  color: #9370DB;
 }
 
 .fade-scale-enter-active,
@@ -473,7 +346,7 @@ onMounted(() => {
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .beam {
-    width: 320px; /* Adjusted for mobile */
+    width: 320px;
   }
   
   .left-connection {
@@ -493,19 +366,25 @@ onMounted(() => {
   }
   
   .pan {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .pan-inner {
     width: 70px;
     height: 70px;
   }
   
-  .pan-inner {
-    width: 60px;
-    height: 60px;
+  .pan-number {
+    font-size: 1.5rem;
   }
   
-  .number-block {
-    width: 30px;
-    height: 30px;
-    font-size: 1rem;
+  .vertical-beam {
+    height: 220px;
+  }
+  
+  .pan-string {
+    height: 50px;
   }
 }
 </style> 
