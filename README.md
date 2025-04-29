@@ -1,8 +1,8 @@
-# Balance Scale Addition Game
+# The Sum Side Up - A Balance Scale Addition Game
 
 ## Overview
 
-The Balance Scale Addition Game is an interactive educational tool designed to teach addition concepts through visual intuition. Students interact with a virtual balance scale where they need to find numbers that add up to match a target value displayed on one side of the scale. The scale provides immediate visual feedback by tilting to indicate if the sum is too large or too small, making abstract mathematical concepts concrete and tangible.
+The Sum Side Up is an interactive educational tool designed to teach addition concepts through visual intuition. Students interact with a virtual balance scale where they need to find numbers that add up to match a target value displayed on one side of the scale. The scale provides immediate visual feedback by tilting to indicate if the sum is too large or too small, making abstract mathematical concepts concrete and tangible.
 
 ## Educational Approach
 
