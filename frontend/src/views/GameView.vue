@@ -53,25 +53,25 @@
             </div>
             
             <div class="controls-right flex items-center space-x-2">
-              <button 
-                @click="toggleMute"
+            <button 
+              @click="toggleMute" 
                 class="sound-button"
-                :title="isMuted ? 'Unmute sounds' : 'Mute sounds'"
-                aria-label="Toggle sound"
-              >
+              :title="isMuted ? 'Unmute sounds' : 'Mute sounds'"
+              aria-label="Toggle sound"
+            >
                 <span v-if="isMuted" class="sound-icon">🔇</span>
                 <span v-else class="sound-icon">🔊</span>
-              </button>
-              
+            </button>
+            
               <!-- Time Remaining (new) -->
               <div v-if="remainingTime !== null" class="time-badge">
                 <span class="time-label">Time</span>
                 <span class="time-number" :class="{ 'hurry-up': remainingTime < 5 }">
                   {{ remainingTime }}s
                 </span>
-              </div>
             </div>
-            
+          </div>
+          
             <div class="score-badge">
               <span class="score-label">Score</span>
               <span class="score-number">{{ gameState.successes }}/{{ gameState.attempts }}</span>
@@ -88,9 +88,9 @@
           <div class="balance-scale-wrapper">
             <!-- Enhanced Balance Scale Component -->
             <EnhancedBalanceScale
-              :leftValue="sum"
-              :rightValue="targetNumber"
-              :showFeedback="true"
+            :leftValue="sum" 
+            :rightValue="targetNumber" 
+            :showFeedback="true"
               :key="`enhanced-scale-${targetNumber}-${Date.now()}`"
               class="compact-scale"
               ref="enhancedBalanceScaleRef"
@@ -134,18 +134,18 @@
                   {{ gameState.isComplete ? 'Hooray! Click Next' : 'Check Answer' }}
                 </button>
               </div>
-            </div>
-          </div>
-          
+                </div>
+              </div>
+              
           <!-- Next Problem Button at the Bottom for Space Efficiency -->
           <div v-if="gameState.isComplete" class="text-center">
-            <button 
-              @click="nextProblem" 
+                <button 
+                  @click="nextProblem" 
               class="next-button"
-            >
+                >
               Next
-            </button>
-          </div>
+                </button>
+              </div>
 
           <!-- Update the feedback mascot to show hint about matching sum -->
           <div class="feedback-mascot-container">
@@ -420,7 +420,7 @@ async function startGame() {
   // Only reset level to 1 if this is a new game (without configId)
   // For continued games, we want to keep the level from the progress
   if (configId.value === 'default') {
-    // First reset the game to initialize everything including target number
+  // First reset the game to initialize everything including target number
     console.log('Calling resetGame to initialize fresh game state');
     await gameStore.resetGame();
     
@@ -526,11 +526,11 @@ async function checkAnswer() {
       
       // Only record if we have a valid user ID
       if (userId) {
-        const attempt: GameAttempt = {
+      const attempt: GameAttempt = {
           userId,
-          activityId: configId.value,
-          timestamp: new Date(),
-          target: targetNumber.value,
+        activityId: configId.value,
+        timestamp: new Date(),
+        target: targetNumber.value,
           inputs: [...gameState.value.addends],
           success: finalResult,
           timeSpent: timeSpent.value,
@@ -538,8 +538,8 @@ async function checkAnswer() {
         };
         
         console.log(`Sending attempt with data:`, attempt);
-        await progressService.recordAttempt(attempt);
-        console.log('Game attempt recorded successfully');
+      await progressService.recordAttempt(attempt);
+      console.log('Game attempt recorded successfully');
       }
     } catch (error) {
       console.error('Failed to record attempt:', error);
@@ -867,7 +867,7 @@ function getRandomIncorrectMessage(actual: number, target: number) {
     return messages[Math.floor(Math.random() * messages.length)];
   }
 }
-</script>
+</script> 
 
 <style scoped>
 /* Game container with background */

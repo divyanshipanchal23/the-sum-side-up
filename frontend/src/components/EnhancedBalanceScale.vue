@@ -109,10 +109,11 @@ const beamAngle = computed(() => {
   const maxAngle = 20;
   // Scale the angle based on the relative weight difference
   const weightSum = Math.max(1, leftWeight.value + rightWeight.value);
+  // const weightSum = leftWeight.value + rightWeight.value;
   const scaledDiff = (diff / weightSum) * maxAngle;
   // Add negative multiplier to make it tilt down on the heavier side
   const angle = -1 * Math.max(-maxAngle, Math.min(maxAngle, scaledDiff * 2));
-  
+  // const angle = -0.5 * scaledDiff * 2;
   return angle;
 });
 

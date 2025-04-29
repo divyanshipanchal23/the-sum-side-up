@@ -1,257 +1,291 @@
-## **Your Challenge: Build Our First Interactive Activity**
+# Balance Scale Addition Game
 
-**March 2, 2025**: If you are not arriving here from one of our job listing posts, please [see this](https://www.comini.in/hiring_soft_dev).
+## Overview
 
-For this challenge, you'll implement one of our planned activities: **The Balance Scale Addition Game**. This game teaches addition through visual intuition - imagine a balance scale where students need to find numbers that add up to match a target value. When they're close but not quite right, the scale tilts to show them if their sum is too large or too small!
+The Balance Scale Addition Game is an interactive educational tool designed to teach addition concepts through visual intuition. Students interact with a virtual balance scale where they need to find numbers that add up to match a target value displayed on one side of the scale. The scale provides immediate visual feedback by tilting to indicate if the sum is too large or too small, making abstract mathematical concepts concrete and tangible.
 
-This implementation will serve as a template for how we structure and build future activities.
+## Educational Approach
 
->This is an excellent opportunity to showcase your skills while contributing to educational technology. All contributions will be publicly available, and any features or improvements that are incorporated into the project **will be credited to their creators**.
+### Game Mechanics and Learning
 
-_Please make sur you read this in its entirety_. Understanding the requirements is an important aspect.
+The Balance Scale Addition Game leverages several key educational principles:
 
-**An Important Note**: A big part of building something great is to be able to understand a problem, see what potential solutions can be and work with ambiguity that is part of our life. We won't know whether users will truly like a feature, or like the idea of it, but not its current implementation. Your role is to not just blindly check off a set of tasks, but to understand the greater goal and see how the tasks fit into this context and how you can resolve any ambiguity based on the goal. This must be balanced with certain hard considerations. For instance, there are reasons we want you to use the specific stack given here. This may be new to you, but that's part of the challenge -- picking something up quickly. Hope you'll enjoy working on this, and also learn. Also, make sure you understand your code intimately. AI tools can build products, but if those are black boxes, you run a big risk of not knowing what errors lurk inside. Imagine building a skyscraper, but knowing nothing about how deep the foundation goes, or if it can stand the test of time or typhoons. Thanks!
+#### Visual-Spatial Learning
+The game transforms abstract numerical relationships into concrete visual representations. By using a balance scale as the central metaphor, students can:
+- See the relationship between numbers
+- Understand equality and inequality through physical balance
+- Develop intuition about numeric relationships before formal algorithms
 
-## But First, A Bit About Us
+#### Immediate Feedback
+Learning is accelerated through:
+- Real-time visual feedback (scale tilting)
+- Color-coded indicators for correct/incorrect answers
+- Sound effects that reinforce understanding
+- Encouraging messages that promote growth mindset
 
-**Anyone can learn anything!**
+#### Adaptive Difficulty
+The game meets students where they are and grows with them:
+- Starts with simple addition problems using small numbers
+- Gradually increases complexity based on performance
+- Introduces additional addends as students master basic concepts
+- Adjusts target number ranges to challenge developing skills
 
-We are [Comini Learning](https://www.comini.in/).
+#### Differentiated Learning Paths
+Support for diverse learning needs:
+- Optional time limits for students who need pacing challenges
+- Configurable hint systems for those who need additional support
+- Multiple input methods (keyboard, buttons) for accessibility
+- Progress tracking to identify areas needing reinforcement
 
-We truly believe this, and we are building an ecosystem of tools to help make it happen. Starting with early education, we're creating a new, **playful, personalized, and meaningful way of learning**.
+### Pedagogical Foundation
 
-Our approach combines both offline and online experiences:
-- We run [microschools](https://www.comini.in/) that bring learning to life
-- We develop online learning tools that adapt to each student
-- We're building [learning copilots](https://tryripples.comini.in/) to support parents and educators
+This game was designed with these core educational principles:
 
-We realized that to enable personalized meaningful offline learning, we need to build our own full-stack of technology & AI tools that help with the philosophy (why), process (how), and practice (what) of learning. 
+1. **Concrete to Abstract**: Starting with visual models before moving to symbolic math
+2. **Active Learning**: Students experiment and discover patterns rather than following procedures
+3. **Growth Mindset**: Feedback focused on effort and improvement, not just right/wrong
+4. **Personalization**: Customizable difficulty adapts to individual learning needs
+5. **Metacognition**: Students can visualize their thinking and reflect on their strategies
 
-One of our key initiatives is [Zippie, our "microschool in a box"](https://www.youtube.com/watch?v=FqjGiSW8G_s) that integrates all these elements from the ground up.
+### Alignment with Educational Standards
 
-You can read more about [our approach](https://blog.comini.in/p/how-can-we-personalize-learning) and [how we hire](https://saigaddam.medium.com/hiring-well-needs-systems-thinking-ce1ea4c45a09/).
+The game supports these common mathematical practices and standards:
+- Making sense of problems and persevering in solving them
+- Reasoning abstractly and quantitatively
+- Looking for and making use of structure
+- Developing number sense and fluency with addition
 
-Come help us build this ecosystem of tools and transform education for hundreds of millions!
+## Live Demo
 
-**[Comini Learning](https://www.comini.in/) | [Our Blog](https://blog.comini.in/)**
+The Balance Scale Addition Game is live and fully functional! Experience the game yourself at:
 
-## **Technical Requirements**
+**[https://the-sum-side-up.vercel.app/](https://the-sum-side-up.vercel.app/)**
 
-### **Frontend (Vue.js)**
+### Key Screens
 
-1. **Authentication**
-    - Integrate Firebase Authentication (email/password and Google sign-in)
-    - Protected routes based on user roles
-    - Session management
-2. **Balance Game Interface**
-    - Interactive balance scale visualization
-    - Target number displayed on one side
-    - Input fields for addends on the other
-    - Visual feedback through scale tilt
-    - Animations for balance states
-    - **IMPORTANT**: Responsive design for different screen sizes, especially mobile. 
-3. **Activity Builder**
-    - Configure difficulty levels
-    - Set target ranges and number of addends
-    - Preview functionality
-    - Please see the expanded discussion below
-4. **Technical Stack**
-    - Vue Router for navigation
-    - Pinia/Vuex for state management
-    - Firestore for data persistence
-    - CSS framework of your choice (Tailwind recommended)
+![Game Interface](pics/game-interface.png)
+*The main game interface showing the balance scale, target number, and input fields*
 
-### **Backend (FastAPI)**
+![Activity Builder](pics/activity-builder.png)
+*The activity builder interface for creating custom game configurations*
 
-1. **API Development**
-    - Endpoints for game configuration
-    - User progress tracking
-    - Authentication token validation
-2. **Data Management**
-    - Game state schemas using Pydantic
-    - Progress tracking
-    - Error handling
-    - Test coverage
+![Progress Tracking](pics/progress-screen.png)
+*User progress tracking with performance statistics*
 
-## **Evaluation Criteria**
+### Responsive Design
 
-- Code organization and modularity
-- Game mechanics implementation
-- User experience and visual feedback
-- Edge case handling
-- Authentication implementation
-- Documentation quality
+The game is fully responsive and works seamlessly on:
+- Desktop computers
+- Tablets
+- Mobile phones
 
-## **Additional Challenges**
+This ensures accessibility in various educational settings, from computer labs to personal devices at home.
 
-- Dockerize the application
-- Add component unit tests
-- **Design for Multiple Skill Levels:**
-  - Create an intuitive interface for younger learners (think: visual cues, simpler numbers)
-  - Scale difficulty for advanced students (multiple numbers, larger values, time challenges)
-  - Build adaptive difficulty that responds to player performance
-  - Consider adding visual themes or contexts that make addition more relatable (e.g., balancing weights, matching cookie quantities)
+## Features
 
-## **Why This Matters**
+### Core Game Experience
+- **Interactive Balance Scale**: A visually engaging scale that responds to user inputs with realistic tilting animations
+- **Target Number Generation**: Dynamically generated target numbers based on difficulty level
+- **Multiple Input Fields**: Support for 2-5 addends, adjustable based on difficulty
+- **Immediate Visual Feedback**: The scale tilts to indicate if values are too high or too low
+- **Sound Effects**: Audio feedback for correct/incorrect answers and game events
+- **Progression System**: Gradually increasing difficulty based on player performance
+- **Time Challenges**: Optional time limits to encourage quick thinking
+- **Hints System**: Configurable hint availability to support learners
 
-This balance scale game is just the beginning. Your implementation will help establish patterns for future activities like:
+### User Management
+- **Authentication**: Email/password and Google sign-in options via Firebase
+- **Progress Tracking**: User activity and performance statistics
+- **Session Management**: Secure user sessions with protected routes
 
-- Fraction visualization tools
-- Geometry construction games
-- Language learning exercises
-- Science simulation activities
+### Activity Builder
+- **Customizable Configurations**: Create and save custom game settings
+- **Difficulty Settings**: Adjust target ranges and number of addends
+- **Time Limits**: Optional countdown timer settings
+- **Preview Functionality**: Test configurations before saving
+- **Sharable Activities**: Activities can be made public for other users
+
+### Technical Features
+- **Responsive Design**: Works on desktops, tablets, and mobile devices
+- **Offline Support**: Core game functionality works without internet
+- **Accessibility**: Screen reader support and keyboard navigation
+- **Error Handling**: Robust error handling for API calls and game logic
 
-By building this foundation well, you'll help us create a platform that makes learning more intuitive and engaging for students worldwide.
-
->This is an excellent opportunity to showcase your skills while contributing to educational technology. All contributions will be publicly available, and any features or improvements that are incorporated into the project **will be credited to their creators**.
-
-
-## **Licensing**
-
-This project is open source under the Apache License 2.0. This means:
-
-- You can freely use and modify the code
-- You can include it in commercial products
-- You must include the original copyright notice
-- You must state if you've made significant changes
-- The original code maintainers have patent rights
-
-Why this license? We want to build this in public and allow others to learn from and contribute to these educational tools, while ensuring we can sustainably maintain and develop the platform, including commercial applications.
-
-You can find the full license in the LICENSE file of this repository.
-
-## **Getting Started**
-
-1. Fork the repository **and keep it private** (please see documentation adn commit guidelines below; we'll ask you at the end to share access with our github ids)
-2. Review the documentation
-3. Set up your development environment
-4. Create your project plan:
-    - Break down the components
-    - Set milestones
-    - Identify potential challenges
-    - Share your plan with us for feedback
-5. Start building!
-
-## **Documentation Expectations**
-
-Your repository should include:
-
-### **Project Plan**
-
-Document your approach before diving in. What will you tackle first? How will you break this down into manageable pieces? We want to see your thought process.
-
-
-### **Learning Journey**
-
-Create a LEARNING.md in your repository. Use this to document:
-
-- Technical challenges you faced
-- How you solved them
-- What you learned along the way
-- Design decisions and their reasoning
-- Things you'd do differently next time
-
-Keep it real - we're interested in your authentic experience--and words---and growth through this project.
-
-### **IMPORTANT! Commit Guidelines**
-
-It is important that you create a repo and update it frequently with meaningful commit messages. This helps us understand your development process. We also do not want to see code created by someone else or AI-code which you do not understand. Use of AI tools is fine, but you must be able to code, and understand the code that is in the repo.
-
-1. Commit Frequently
-- Make a commit whenever a logical part of your feature is complete
-- Each commit should reflect incremental progress rather than large, unrelated changes
-
-2. Use Meaningful Commit Messages
-- Clearly describe what each commit does. Avoid generic messages like "Updated code" or "Fixed bugs"
-  
-  **Good examples:**
-  - ✅ Added user authentication with JWT
-  - ✅ Styled the login page and fixed layout issues
-  - ✅ Connected frontend form with backend API
-
-3. Keep Commits Small and Atomic
-- Each commit should ideally introduce a single feature, fix, or improvement
-- Avoid large, single commits that contain multiple unrelated changes
-
-4. Commit Code You Write, Not Just Final Versions
-- Don't wait until the whole feature is complete to commit. Commit as you build
-- Show your thought process through progressive commits
-
-5. Push Regularly to GitHub
-- Push your commits to the GitHub repository **at least once every few hours**
-- This allows us to see your progress over time instead of a single final submission
-
-6. Avoid Large, Single Commits
-- Your commits should reflect incremental progress rather than a single commit containing the entire project or a major portion of the code
-- Large, single commits make it difficult to assess your development process and may raise concerns about the originality of your work, which could be flagged
-
-## **Important Note**
-
-We value original thinking. While it's perfectly fine to use AI tools like ChatGPT to help with technical implementations or to explore ideas, we want to see _your_ critical thinking driving the project. Show us how you:
-
-- Make architectural decisions
-- Evaluate different approaches
-- Solve problems creatively
-- Learn from challenges
-
-The best submissions we've seen aren't perfect, but they clearly show the developer's thought process and growth throughout the project.
-
-Keep your repository private until we request otherwise, and reach out if you have questions!
-
-## **Activity Builder (Expanded)**
-
-An activity in our platform is any interactive learning experience with clear educational objectives. For the Balance Game, an activity consists of:
-
-- A target number to match
-- Input fields for addends
-- Difficulty settings
-- Success criteria
-- Visual feedback rules
-
-The Activity Builder interface should allow educators to:
-
-- Set difficulty parameters:
-  - Range of target numbers
-  - Number of input fields
-  - Time limits (optional)
-  - Hints availability
-- Define progression:
-  - Starting difficulty
-  - When to increase complexity
-  - Success criteria to advance
-- Preview and test configurations
-- Save templates for reuse
-
-For the Balance Game specifically, the builder should:
-
-- Let educators create problem sets
-- Configure visual feedback sensitivity
-- Set appropriate number ranges for different age groups
-- Define helpful messages for different types of wrong answers
-- Create progression paths (e.g., start with 2 numbers, advance to 3)
-
-This builder will serve as a template for future activities, demonstrating how we structure:
-
-- Activity configuration
-- Difficulty management
-- Progress tracking
-- Educational feedback
-
-## **Licensing**
-This project is open source under the Apache License 2.0. This means:
-
-- You can freely use and modify the code
-- You can include it in commercial products
-- You must include the original copyright notice
-- You must state if you've made significant changes
-- The original code maintainers have patent rights
-
-Why this license? We want to build this in public and allow others to learn from and contribute to these educational tools, while ensuring we can sustainably maintain and develop the platform, including commercial applications.
-
-You can find the full license in the LICENSE file of this repository.
-
-## **Important Note About AI USAGE**
-We are looking for evidence that you can think through/code different aspects of this problem. We want you to be able to think through ramifications and not just outsource it entirely to ChatGPT/LLMs. This is increasingly important as we find that many who are outsourcing programming to LLMs don't understand the code. This results in multiple issues — it is inefficient, has security vulnerabilities, unknown bugs, and more. This ultimately makes for a bad product too. So please be mindful and meaningful in its use.
-
-## **Important Note About Responsive Design**
-It is mentioned above, but worth reiterating. The game should be playable on mobile and desktop. Making learning activities accessible means designing for the most common screen sizes in India in home and classroom settings.
+## Getting Started
+
+The Balance Scale Addition Game is deployed and ready to use on Vercel.
+
+### Accessing the Application
+
+You can access the live application at: [https://the-sum-side-up.vercel.app/](https://the-sum-side-up.vercel.app/)
+
+### User Accounts
+
+* **Demo Account**: If you'd like to explore without creating an account, you can use the demo credentials:
+  * Email: `demo@example.com`
+  * Password: `demo123`
+
+* **Create Your Own**: You can also create your own account using email/password or Google sign-in.
+
+### Getting the Most Out of the Game
+
+1. **Start With Default Game**: New users can immediately start playing with the default game configuration
+2. **Create Custom Games**: Educators can create and save custom game configurations
+3. **Track Progress**: Sign in to track your progress and see improvement over time
+4. **Share Activities**: Create and share educational activities with other users
+
+### Requirements
+
+* Modern web browser (Chrome, Firefox, Safari, Edge)
+* Internet connection for authentication and progress tracking
+* Audio enabled for sound effects (optional)
+* Mobile or desktop device (fully responsive design)
+
+## Architecture
+
+### Frontend (Vue.js)
+- **Framework**: Vue 3 with Composition API
+- **State Management**: Pinia for game state and user data
+- **Routing**: Vue Router with authentication guards
+- **Styling**: Tailwind CSS for responsive design
+- **Sound**: Howler.js for sound management
+- **Data Storage**: Firebase Firestore
+- **Authentication**: Firebase Authentication
+
+### Backend (FastAPI)
+- **API Framework**: FastAPI
+- **Data Validation**: Pydantic models
+- **Authentication**: JWT with Firebase token validation
+- **Testing**: Comprehensive test suite with pytest
+
+### Data Flow
+1. User authenticates via Firebase
+2. Game configurations and user progress are stored in Firestore
+3. Game state is managed locally in Pinia store
+4. User interactions trigger state updates, visual changes, and API calls
+5. Progress is tracked and saved automatically
+
+## Components
+
+### Core Components
+- **BalanceScale**: Visualizes the relationship between target and user inputs
+- **NumberInput**: Custom input component for entering addends
+- **GameView**: Main game interface with controls and feedback
+- **ConfigView**: Activity builder interface for educators
+
+### Services
+- **GameStore**: Manages game state and logic
+- **AuthStore**: Handles user authentication and session
+- **SoundService**: Manages sound effects and muting
+- **ConfigService**: Saves and loads game configurations
+- **ProgressService**: Tracks and retrieves user progress
+
+## How to Play
+
+1. **Start a Game**: Click the "Start Game" button on the game screen
+2. **Balance the Scale**: Enter numbers in the input fields that add up to the target value
+3. **Check Your Answer**: Click "Check Answer" to see if your solution is correct
+4. **Progress**: Successfully complete problems to advance to higher levels
+5. **Customize**: Create custom activities in the Activity Builder to focus on specific skills
+
+## Activity Builder Guide
+
+Educators can create custom activities with specific learning goals:
+
+1. **Create New**: Click "Create New Activity" in the Configuration view
+2. **Set Parameters**:
+   - Title and description
+   - Difficulty level
+   - Target number range
+   - Number of addends
+   - Time limit (optional)
+   - Hint availability
+3. **Preview**: Test your activity before saving
+4. **Save & Share**: Save your activity and choose to make it public
+
+
+## Key Components in Detail
+
+### Game Components
+
+#### Balance Scale (BalanceScale.vue)
+A visually dynamic component that represents a physical balance scale. It:
+- Visualizes weight differences through tilting animations
+- Provides immediate feedback on whether the input matches the target
+- Uses CSS transformations for smooth physics-based animations
+- Includes accessibility features for screen readers
+
+#### Number Input (NumberInput.vue)
+A specialized input component that:
+- Restricts input to valid numerical values
+- Provides increment/decrement buttons
+- Shows validation feedback
+- Supports keyboard navigation and screen readers
+
+### Game Logic
+
+#### Game Store (gameStore.ts)
+The central state management for game mechanics:
+- Manages game configuration (difficulty, addends, time limits)
+- Tracks game state (attempts, successes, current level)
+- Handles target number generation
+- Implements game progression logic
+- Provides computed properties for derived game state
+- Validates user answers and tracks balance state
+
+#### Sound Service (soundService.ts)
+Manages all audio aspects of the game:
+- Loads and caches sound effects using Howler.js
+- Handles playback errors gracefully with fallbacks
+- Supports muting/unmuting functionality
+- Ensures sounds work across different browsers
+
+### User Progress Tracking
+
+#### Progress Service (progressService.ts)
+Tracks and persists user progress:
+- Records individual game attempts
+- Calculates success rates and progression metrics
+- Supports retrieving historical performance data
+- Synchronizes data with Firebase Firestore
+
+### Authentication
+
+#### Auth Store (authStore.ts)
+Manages user authentication state:
+- Handles login, registration, and logout
+- Stores user profile information
+- Provides authentication state to protected routes
+- Integrates with Firebase Authentication
+
+
+### Getting Help
+
+If you encounter issues not covered in this documentation:
+
+1. Check the browser console for error messages
+2. Review the backend logs for API errors
+3. File an issue on the GitHub repository with:
+   - Steps to reproduce the problem
+   - Expected vs. actual behavior
+   - Browser/device information
+   - Screenshots if applicable
+
+## Contributing
+
+We welcome contributions to improve the Balance Scale Addition Game:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## Licensing
+
+This project is licensed under the Apache License 2.0 - see the LICENSE file for details.
+
+## Acknowledgments
+
+- This project was created as part of the Comini Learning hiring challenge
+- Special thanks to all contributors who helped make this educational tool a reality 
